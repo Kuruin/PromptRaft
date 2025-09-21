@@ -5,8 +5,9 @@ const express = require("express");
 const router = express.Router();
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 const z = require('zod');
-const { signupSchema } = require("../schema");
+const { signupSchema, signinSchema } = require("../schema");
 const { connectDb, User } = require("../db");
+const jwt = require("jsonwebtoken");
 connectDb();
 
 router.post("/optimize", async (req, res) => {
@@ -32,18 +33,39 @@ router.post("/signup", async (req, res) => {
     else {
         const dbCall = await User.findOne({ username })
         if (!dbCall) {
-            await User.create({
+            const newUser = await User.create({
                 username,
                 password,
                 firstName,
                 lastName
-            })
-            res.json({ msg: "User signed up successfully" });
+            });
+            const id = newUser._id.toString();
+            const token = jwt.sign({ id }, process.env.SECRET_TOKEN);
+            res.json({ msg: "User signed up successfully", token });
             return;
         }
         res.status(403).json({ error: "User already exists" })
     }
 })
 
+router.post("/signin", async (req, res) => {
+    const { authorization } = req.headers;
+    const token = authorization.split(" ")[1]
+    const valid = signinSchema.safeParse(parsedBody);
+
+    if (!valid.success || token == null) {
+        return res.status(404).json({ error: "Enter valid credentials / token" })
+    }
+
+    try {
+        jwt.verify(token, process.env.SECRET_TOKEN);
+        res.json({ msg: "Signin successfull" });
+    }
+    catch (e) {
+        console.log(e);
+        res.status(400).json({ error: "Enter valid token" });
+    }
+
+})
 
 module.exports = router;
