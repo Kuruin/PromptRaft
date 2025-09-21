@@ -49,6 +49,7 @@ router.post("/signup", async (req, res) => {
 })
 
 router.post("/signin", async (req, res) => {
+    const parsedBody = req.body;
     const { authorization } = req.headers;
     const token = authorization.split(" ")[1]
     const valid = signinSchema.safeParse(parsedBody);
@@ -58,8 +59,14 @@ router.post("/signin", async (req, res) => {
     }
 
     try {
-        jwt.verify(token, process.env.SECRET_TOKEN);
-        res.json({ msg: "Signin successfull" });
+        const dbCall = await User.findOne({ username: parsedBody.username });
+        if (dbCall) {
+            jwt.verify(token, process.env.SECRET_TOKEN);
+            res.json({ msg: "Signin successfull" });
+            return;
+        }
+        res.status(404).json({ error: "User not found" })
+
     }
     catch (e) {
         console.log(e);
