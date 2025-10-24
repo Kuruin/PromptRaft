@@ -52,7 +52,7 @@ export default function PromptTemplatesSection() {
   };
 
   return (
-    <section className="py-20 md:py-32">
+    <section id="templates" className="py-20 md:py-32">
       <div className="container">
         <div className="mx-auto max-w-2xl text-center mb-16">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-4">
@@ -62,7 +62,7 @@ export default function PromptTemplatesSection() {
             Copy these professional templates and customize them for your specific needs.
           </p>
         </div>
-        
+
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {templates.map((template, index) => (
             <CardEnhanced key={index} variant="gold" className="hover:shadow-elegant transition-all duration-300">
@@ -81,7 +81,7 @@ export default function PromptTemplatesSection() {
                   </p>
                 </div>
                 <Button
-                  variant="outline"
+                  variant="custom1"
                   size="sm"
                   className="w-full"
                   onClick={() => copyToClipboard(template.template, index)}

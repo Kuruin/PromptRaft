@@ -10,9 +10,11 @@ export default function Footer() {
             <Link to="/" className="flex items-center gap-2 mb-4">
               <Sparkles className="h-6 w-6 text-primary" />
               <span className="text-2xl font-bold font-mono">
-
-                Prompt Raft
-
+                <Link
+                  to="/#"
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+                  Prompt Raft
+                </Link>
               </span>
             </Link>
             <p className="text-sm text-muted-foreground mb-4">
@@ -68,7 +70,7 @@ export default function Footer() {
             © {new Date().getFullYear()} Idea Sailors. All rights reserved.
           </p>
         </div>
-      </div >
-    </footer >
+      </div>
+    </footer>
   );
 }

@@ -26,7 +26,7 @@ const mistakes = [
 
 export default function CommonMistakesSection() {
   return (
-    <section className="py-20 md:py-32 bg-muted/30">
+    <section id="common-mistakes" className="py-20 md:py-32 bg-muted/30" >
       <div className="container">
         <div className="mx-auto max-w-2xl text-center mb-16">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-4">
@@ -36,7 +36,7 @@ export default function CommonMistakesSection() {
             Learn from these examples and see how small changes can dramatically improve your results.
           </p>
         </div>
-        
+
         <div className="grid gap-8 md:grid-cols-2">
           {mistakes.map((mistake, index) => (
             <CardEnhanced key={index} variant="glass" className="hover:shadow-elegant transition-all duration-300">
