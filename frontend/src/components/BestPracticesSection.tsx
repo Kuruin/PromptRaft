@@ -34,13 +34,15 @@ export default function BestPracticesSection() {
       <div className="container">
         <div className="mx-auto max-w-2xl text-center mb-16">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-4">
-            Best Practices
+            <a href="https://www.youtube.com/watch?v=iRTK-jsfleg" className="hover:underline hover:text-[38px] hover:text-[#5e503f]">
+              Best Practices
+            </a>
           </h2>
           <p className="text-lg text-muted-foreground">
             Follow these proven techniques to write effective prompts that consistently deliver great results.
           </p>
         </div>
-        
+
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {practices.map((practice, index) => (
             <CardEnhanced key={index} variant="ocean" className="hover:shadow-elegant transition-all duration-300">

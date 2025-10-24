@@ -30,13 +30,13 @@ export default function FeaturesSection() {
       <div className="container">
         <div className="mx-auto max-w-2xl text-center mb-16">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-4">
-            Why Use Idea Sailors?
+            Why Use Prompt Raft?
           </h2>
           <p className="text-lg text-muted-foreground">
             Transform your AI interactions with professional-grade prompt engineering tools and techniques.
           </p>
         </div>
-        
+
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {features.map((feature, index) => (
             <CardEnhanced key={index} variant="glass" className="hover:shadow-elegant transition-all duration-300">

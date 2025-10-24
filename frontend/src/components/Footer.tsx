@@ -9,15 +9,17 @@ export default function Footer() {
           <div className="md:col-span-2">
             <Link to="/" className="flex items-center gap-2 mb-4">
               <Sparkles className="h-6 w-6 text-primary" />
-              <span className="text-xl font-bold bg-gradient-to-r from-primary via-ocean-primary to-gold-primary bg-clip-text text-transparent">
-                Idea Sailors
+              <span className="text-2xl font-bold font-mono">
+
+                Prompt Raft
+
               </span>
             </Link>
             <p className="text-sm text-muted-foreground mb-4">
               Master the art of prompt engineering and unlock the full potential of AI language models.
             </p>
           </div>
-          
+
           <div>
             <h3 className="font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
@@ -38,7 +40,7 @@ export default function Footer() {
               </li>
             </ul>
           </div>
-          
+
           <div>
             <h3 className="font-semibold mb-4">Resources</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
@@ -60,13 +62,13 @@ export default function Footer() {
             </ul>
           </div>
         </div>
-        
+
         <div className="mt-12 pt-8 border-t border-border/40">
           <p className="text-center text-sm text-muted-foreground">
             © {new Date().getFullYear()} Idea Sailors. All rights reserved.
           </p>
         </div>
-      </div>
-    </footer>
+      </div >
+    </footer >
   );
 }
