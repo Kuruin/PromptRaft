@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-
+import axios from 'axios'
 const PromptRefinement = () => {
   const [originalPrompt, setOriginalPrompt] = useState("");
   const [refinedPrompt, setRefinedPrompt] = useState("");
@@ -26,18 +26,18 @@ const PromptRefinement = () => {
 
     setIsRefining(true);
 
-    // Simulate API call - replace with actual Supabase Edge Function
-    setTimeout(() => {
-      // Mock refined prompt - replace with AI response
-      const mockRefinedPrompt = `Enhanced version of: "${originalPrompt}"\n\nBe specific and detailed in your request. Include context about your target audience, desired tone, and expected output format. Consider adding examples or constraints to guide the AI toward your exact needs.`;
-
-      setRefinedPrompt(mockRefinedPrompt);
+    async function dbCall() {
+      const dbCall = await axios.post("http://localhost:3000/api/v1/user/optimize", {
+        prompt: originalPrompt
+      })
+      setRefinedPrompt(dbCall.data.response);
       setIsRefining(false);
 
       // Gamification: Add XP
       setUserXP(prev => prev + 25);
       toast.success("Prompt refined successfully! +25 XP earned");
-    }, 2000);
+    }
+    dbCall();
   };
 
   const copyToClipboard = (text: string) => {
