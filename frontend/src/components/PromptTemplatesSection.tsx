@@ -52,7 +52,7 @@ export default function PromptTemplatesSection() {
   };
 
   return (
-    <section id="templates" className="py-20 md:py-32">
+    <section id="templates" className="py-20 md:py-32 dark:bg-[#121212]">
       <div className="container">
         <div className="mx-auto max-w-2xl text-center mb-16">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-4">
@@ -65,7 +65,7 @@ export default function PromptTemplatesSection() {
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {templates.map((template, index) => (
-            <CardEnhanced key={index} variant="gold" className="hover:shadow-elegant transition-all duration-300">
+            <CardEnhanced key={index} variant="default" className="hover:shadow-elegant transition-all duration-300 dark:bg-[#282828]">
               <CardEnhancedHeader>
                 <div className="mb-2">
                   <span className="inline-block rounded-full bg-gold-primary/10 px-3 py-1 text-xs font-semibold text-gold-primary">

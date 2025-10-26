@@ -4,7 +4,7 @@ import { ArrowRight, Sparkles } from "lucide-react";
 
 export default function HeroSection() {
   return (
-    <section className="relative overflow-hidden py-20 md:py-32">
+    <section className="relative overflow-hidden py-20 md:py-32 dark:bg-[#121212]">
       <div className="absolute inset-0 bg-gradient-subtle opacity-50" />
 
       <div className="container relative z-10">

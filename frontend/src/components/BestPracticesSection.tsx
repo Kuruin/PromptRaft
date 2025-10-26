@@ -30,7 +30,7 @@ const practices = [
 
 export default function BestPracticesSection() {
   return (
-    <section id="best-practices" className="py-20 md:py-32" >
+    <section id="best-practices" className="py-20 md:py-32 dark:bg-[#121212]" >
       <div className="container">
         <div className="mx-auto max-w-2xl text-center mb-16">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-4">
@@ -45,7 +45,7 @@ export default function BestPracticesSection() {
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {practices.map((practice, index) => (
-            <CardEnhanced key={index} variant="ocean" className="hover:shadow-elegant transition-all duration-300">
+            <CardEnhanced key={index} variant="ocean" className="hover:shadow-elegant transition-all duration-300 dark:bg-[#282828]">
               <CardEnhancedHeader>
                 <div className="mb-4">
                   <CheckCircle2 className="h-8 w-8 text-ocean-primary" />

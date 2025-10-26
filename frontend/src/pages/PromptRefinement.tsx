@@ -25,15 +25,15 @@ const PromptRefinement = () => {
     }
 
     setIsRefining(true);
-    
+
     // Simulate API call - replace with actual Supabase Edge Function
     setTimeout(() => {
       // Mock refined prompt - replace with AI response
       const mockRefinedPrompt = `Enhanced version of: "${originalPrompt}"\n\nBe specific and detailed in your request. Include context about your target audience, desired tone, and expected output format. Consider adding examples or constraints to guide the AI toward your exact needs.`;
-      
+
       setRefinedPrompt(mockRefinedPrompt);
       setIsRefining(false);
-      
+
       // Gamification: Add XP
       setUserXP(prev => prev + 25);
       toast.success("Prompt refined successfully! +25 XP earned");
@@ -49,9 +49,9 @@ const PromptRefinement = () => {
   const xpProgress = (userXP / nextLevelXP) * 100;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen dark:bg-[#1a1a1a]">
       <Header />
-      
+
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* User Progress Bar */}
         <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
@@ -59,7 +59,7 @@ const PromptRefinement = () => {
             <h1 className="text-3xl font-bold text-foreground mb-2">Prompt Refinement Studio</h1>
             <p className="text-muted-foreground">Transform your prompts into powerful instructions</p>
           </div>
-          
+
           <div className="flex items-center space-x-6">
             <div className="text-center">
               <div className="text-sm text-muted-foreground">Level</div>
@@ -72,8 +72,8 @@ const PromptRefinement = () => {
             <div className="text-center min-w-32">
               <div className="text-sm text-muted-foreground">XP Progress</div>
               <div className="w-full bg-muted rounded-full h-2 mt-1">
-                <div 
-                  className="bg-gradient-ocean h-2 rounded-full transition-all duration-300"
+                <div
+                  className="bg-black dark:bg-white/90 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${xpProgress}%` }}
                 />
               </div>
@@ -99,7 +99,7 @@ const PromptRefinement = () => {
             {/* Main Refinement Interface */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Input Section */}
-              <CardEnhanced variant="ocean" className="h-fit">
+              <CardEnhanced variant="ocean" className="h-fit dark:bg-[#1f1f1f]/100">
                 <CardEnhancedHeader>
                   <CardEnhancedTitle className="flex items-center gap-2">
                     <Target className="w-5 h-5" />
@@ -117,8 +117,8 @@ const PromptRefinement = () => {
                     className="min-h-32 resize-none"
                   />
                   <div className="flex gap-2">
-                    <Button 
-                      variant="ocean" 
+                    <Button
+                      variant="custom1"
                       onClick={handleRefinePrompt}
                       disabled={isRefining || !originalPrompt.trim()}
                       className="flex-1"
@@ -156,8 +156,8 @@ const PromptRefinement = () => {
                       <div className="space-y-3">
                         <p className="text-sm leading-relaxed">{refinedPrompt}</p>
                         <div className="flex gap-2 pt-2 border-t">
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="custom1"
                             size="sm"
                             onClick={() => copyToClipboard(refinedPrompt)}
                             className="flex-1"
@@ -290,7 +290,7 @@ const PromptRefinement = () => {
           </TabsContent>
         </Tabs>
       </div>
-      
+
       <Footer />
     </div>
   );
