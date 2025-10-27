@@ -19,7 +19,8 @@ const buttonVariants = cva(
         // Custom nautical variants
         ocean: "border dark:bg-[#121212] bg-gradient-ocean text-primary-foreground hover:shadow-ocean transition-all duration-300 transform hover:scale-105 dark:border-white dark:text-white",
         gold: "bg-gradient-gold text-ocean-primary hover:shadow-glow transition-all duration-300 transform hover:scale-105",
-        waves: "bg-gradient-waves text-ocean-primary border border-ocean-light hover:shadow-elegant transition-all duration-300"
+        waves: "bg-gradient-waves text-ocean-primary border border-ocean-light hover:shadow-elegant transition-all duration-300",
+        challenge: "dark:bg-green-700/50 hover:bg-green-700/90 dark:hover:bg-green-700 hover:text-white"
       },
       size: {
         default: "h-10 px-4 py-2",

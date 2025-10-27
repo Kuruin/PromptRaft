@@ -10,7 +10,7 @@ const cardVariants = cva(
         default: "border-border",
         ocean: "border-ocean-light dark:border-ocean-light/30 dark:hover:border-ocean-light/70 bg-gradient-to-br from-background to-ocean-mist/20 shadow-ocean hover:shadow-elegant",
         gold: "border-gold-accent dark:border-gold-accent/30 dark:hover:border-gold-accent/70 bg-gradient-to-br from-background to-gold-light/10 shadow-glow",
-        glass: "border-ocean-light/0 backdrop-blur-sm shadow-elegant",
+        glass: "border-ocean-light/0 dark:hover:border-ocean-light/70 backdrop-blur-sm shadow-elegant",
       },
     },
     defaultVariants: {
