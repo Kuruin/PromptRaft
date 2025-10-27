@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { CardEnhanced, CardEnhancedContent, CardEnhancedDescription, CardEnhancedHeader, CardEnhancedTitle } from "@/components/ui/card-enhanced";
@@ -10,6 +10,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import axios from 'axios'
+import { Minimize2, Maximize2 } from "lucide-react";
 const PromptRefinement = () => {
   const [originalPrompt, setOriginalPrompt] = useState("");
   const [refinedPrompt, setRefinedPrompt] = useState("");
@@ -17,6 +18,17 @@ const PromptRefinement = () => {
   const [userLevel, setUserLevel] = useState(1);
   const [userXP, setUserXP] = useState(150);
   const [userStreak, setUserStreak] = useState(3);
+  const [isInputFullScreen, setIsInputFullScreen] = useState(false);
+  const [isOutputFullScreen, setIsOutputFullScreen] = useState(false);
+
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsInputFullScreen(false);
+      if (e.key === "Escape") setIsOutputFullScreen(false);
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, []);
 
   const handleRefinePrompt = async () => {
     if (!originalPrompt.trim()) {
@@ -97,87 +109,108 @@ const PromptRefinement = () => {
 
           <TabsContent value="refine" className="space-y-8">
             {/* Main Refinement Interface */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className={`grid grid-cols-1 lg:grid-cols-2 gap-8 transition-all duration-300 ${isInputFullScreen ? "fixed inset-0 z-50 bg-background p-8 overflow-y-auto" : ""
+              } ${isOutputFullScreen ? "fixed inset-0 z-50 bg-background p-8 overflow-y-auto" : ""}`} >
               {/* Input Section */}
-              <CardEnhanced variant="ocean" className="h-fit dark:bg-[#1f1f1f]/100">
-                <CardEnhancedHeader>
-                  <CardEnhancedTitle className="flex items-center gap-2">
-                    <Target className="w-5 h-5" />
-                    Your Original Prompt
-                  </CardEnhancedTitle>
-                  <CardEnhancedDescription>
-                    Enter your prompt below and we'll help you make it better
-                  </CardEnhancedDescription>
-                </CardEnhancedHeader>
-                <CardEnhancedContent className="space-y-4">
-                  <Textarea
-                    placeholder="Enter your prompt here... For example: 'Write me a blog post about AI'"
-                    value={originalPrompt}
-                    onChange={(e) => setOriginalPrompt(e.target.value)}
-                    className="min-h-32 resize-none"
-                  />
-                  <div className="flex gap-2">
-                    <Button
-                      variant="custom1"
-                      onClick={handleRefinePrompt}
-                      disabled={isRefining || !originalPrompt.trim()}
-                      className="flex-1"
-                    >
-                      {isRefining ? (
-                        <>
-                          <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                          Refining...
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="w-4 h-4 mr-2" />
-                          Refine Prompt
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </CardEnhancedContent>
-              </CardEnhanced>
+              {!isOutputFullScreen && (
+                <CardEnhanced variant="ocean" className={`relative h-fit dark:bg-[#1f1f1f]/100 ${isInputFullScreen ? "max-w-5xl mx-auto w-full h-auto" : ""
+                  }`}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-2 right-2 z-50"
+                    onClick={() => setIsInputFullScreen(!isInputFullScreen)}
+                  >
+                    {isInputFullScreen ? (
+                      <Minimize2 className="w-4 h-4" />
+                    ) : (
+                      <Maximize2 className="w-4 h-4" />
+                    )}
+                  </Button>
+                  <CardEnhancedHeader>
+                    <CardEnhancedTitle className="flex items-center gap-2">
+                      <Target className="w-5 h-5" />
+                      Your Original Prompt
+                    </CardEnhancedTitle>
+                    <CardEnhancedDescription>
+                      Enter your prompt below and we'll help you make it better
+                    </CardEnhancedDescription>
+                  </CardEnhancedHeader>
+                  <CardEnhancedContent className="space-y-4">
+                    <Textarea
+                      placeholder="Enter your prompt here... For example: 'Write me a blog post about AI'"
+                      value={originalPrompt}
+                      onChange={(e) => setOriginalPrompt(e.target.value)}
+                      className="min-h-32 resize-none"
+                    />
+                    <div className="flex gap-2">
+                      <Button
+                        variant="custom1"
+                        onClick={handleRefinePrompt}
+                        disabled={isRefining || !originalPrompt.trim()}
+                        className="flex-1"
+                      >
+                        {isRefining ? (
+                          <>
+                            <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                            Refining...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="w-4 h-4 mr-2" />
+                            Refine Prompt
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </CardEnhancedContent>
+                </CardEnhanced>
+              )}
 
               {/* Output Section */}
-              <CardEnhanced variant="gold" className="h-fit">
-                <CardEnhancedHeader>
-                  <CardEnhancedTitle className="flex items-center gap-2">
-                    <Sparkles className="w-5 h-5" />
-                    Refined Result
-                  </CardEnhancedTitle>
-                  <CardEnhancedDescription>
-                    Your improved, more effective prompt
-                  </CardEnhancedDescription>
-                </CardEnhancedHeader>
-                <CardEnhancedContent className="space-y-4">
-                  <div className="min-h-32 p-4 bg-muted/50 rounded-lg border-2 border-dashed border-muted-foreground/20">
-                    {refinedPrompt ? (
-                      <div className="space-y-3">
-                        <p className="text-sm leading-relaxed">{refinedPrompt}</p>
-                        <div className="flex gap-2 pt-2 border-t">
-                          <Button
-                            variant="custom1"
-                            size="sm"
-                            onClick={() => copyToClipboard(refinedPrompt)}
-                            className="flex-1"
-                          >
-                            <Copy className="w-4 h-4 mr-2" />
-                            Copy
-                          </Button>
+              {!isInputFullScreen && (
+                <CardEnhanced variant="gold" className={`relative h-fit ${isOutputFullScreen ? "fixed top-10 right-10 bottom-10 z-50 md:w-1/2 h-auto" : ""}`}>
+                  <Button variant="ghost" size="icon" className="absolute top-2 right-2 z-50" onClick={() => setIsOutputFullScreen(!isOutputFullScreen)}>
+                    {isOutputFullScreen ? <Minimize2 className="w-4 h-4"></Minimize2> : <Maximize2 className="w-4 h-4"></Maximize2>}
+                  </Button>
+                  <CardEnhancedHeader>
+                    <CardEnhancedTitle className="flex items-center gap-2">
+                      <Sparkles className="w-5 h-5" />
+                      Refined Result
+                    </CardEnhancedTitle>
+                    <CardEnhancedDescription>
+                      Your improved, more effective prompt
+                    </CardEnhancedDescription>
+                  </CardEnhancedHeader>
+                  <CardEnhancedContent className="space-y-4">
+                    <div className="min-h-32 p-4 bg-muted/50 rounded-lg border-2 border-dashed border-muted-foreground/20">
+                      {refinedPrompt ? (
+                        <div className="space-y-3">
+                          <p className="text-sm leading-relaxed">{refinedPrompt}</p>
+                          <div className="flex gap-2 pt-2 border-t">
+                            <Button
+                              variant="custom1"
+                              size="sm"
+                              onClick={() => copyToClipboard(refinedPrompt)}
+                              className="flex-1"
+                            >
+                              <Copy className="w-4 h-4 mr-2" />
+                              Copy
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-center h-full text-muted-foreground">
-                        <div className="text-center">
-                          <Sparkles className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                          <p>Your refined prompt will appear here</p>
+                      ) : (
+                        <div className="flex items-center justify-center h-full text-muted-foreground">
+                          <div className="text-center">
+                            <Sparkles className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                            <p>Your refined prompt will appear here</p>
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                </CardEnhancedContent>
-              </CardEnhanced>
+                      )}
+                    </div>
+                  </CardEnhancedContent>
+                </CardEnhanced>
+              )}
             </div>
 
             {/* Quick Tips */}
@@ -292,7 +325,7 @@ const PromptRefinement = () => {
       </div>
 
       <Footer />
-    </div>
+    </div >
   );
 };
 
