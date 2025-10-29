@@ -11,6 +11,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import axios from 'axios'
 import { Minimize2, Maximize2 } from "lucide-react";
+
 const PromptRefinement = () => {
   const [originalPrompt, setOriginalPrompt] = useState("");
   const [refinedPrompt, setRefinedPrompt] = useState("");
@@ -63,7 +64,6 @@ const PromptRefinement = () => {
   return (
     <div className="min-h-screen dark:bg-[#1a1a1a]">
       <Header />
-
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* User Progress Bar */}
         <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
