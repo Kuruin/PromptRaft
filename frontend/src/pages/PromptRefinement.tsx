@@ -6,18 +6,22 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Wand2, Copy, RefreshCw, Sparkles, Trophy, Target, BookOpen } from "lucide-react";
 import { toast } from "sonner";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import axios from 'axios'
 import { Minimize2, Maximize2 } from "lucide-react";
-import { AbsoluteCenter, ProgressCircle } from "@chakra-ui/react"
+import CircularProgressBar from "@/components/Circular-bar";
 
 const PromptRefinement = () => {
   const [originalPrompt, setOriginalPrompt] = useState("");
   const [refinedPrompt, setRefinedPrompt] = useState("");
-  const [userOutput, setUserOutput] = useState("");
-  const [refinedOutput, setRefinedOutput] = useState("");
+
+  const [userFeedback, setUserFeedback] = useState("");
+  const [refinedFeedback, setRefinedFeedback] = useState("");
+
+  const [userPercentage, setUserPercentage] = useState(0);
+  const [backendPercentage, setBackendPercentage] = useState(14);
+
   const [isRefining, setIsRefining] = useState(false);
   const [userLevel, setUserLevel] = useState(1);
   const [userXP, setUserXP] = useState(150);
@@ -43,25 +47,35 @@ const PromptRefinement = () => {
     setIsRefining(true);
 
     async function dbCall() {
-      const dbCall = await axios.post("http://localhost:3000/api/v1/user/optimize", {
-        prompt: originalPrompt
-      })
-      setRefinedPrompt(dbCall.data.response);
-      setIsRefining(false);
+      try {
+        const dbCall = await axios.post("http://localhost:3000/api/v1/user/optimize", {
+          prompt: originalPrompt
+        });
+        if (dbCall.data) {
+          setRefinedPrompt(dbCall.data.response);
+          setIsRefining(false);
+          setUserXP(prev => prev + 25);
+          toast.success("Prompt refined successfully! +25 XP earned");
+        }
 
-      const userDbCall = await axios.post("http://localhost:3000/api/v1/user/secret-optimize", {
-        prompt: originalPrompt
-      });
-      setUserOutput(userDbCall.data.response);
+        const userDbCall = await axios.post("http://localhost:3000/api/v1/user/secret-optimize", {
+          prompt: originalPrompt
+        });
+        setUserFeedback(userDbCall.data.feedback.split("Reason: ")[1]);
+        setUserPercentage(Number(userDbCall.data.score.split(" ")[1]));
 
-      const outputDbCall = await axios.post("http://localhost:3000/api/v1/user/secret-optimize", {
-        prompt: refinedPrompt
-      });
-      setRefinedOutput(userDbCall.data.response);
+        const outputDbCall = await axios.post("http://localhost:3000/api/v1/user/secret-optimize", {
+          prompt: refinedPrompt
+        });
+        setRefinedFeedback(outputDbCall.data.feedback.split("Reason: ")[1]);
+        setBackendPercentage(Number(outputDbCall.data.score.split(" ")[1]));
 
-      // Gamification: Add XP
-      setUserXP(prev => prev + 25);
-      toast.success("Prompt refined successfully! +25 XP earned");
+      } catch (e) {
+        toast.error("Looks like Gemini is down!");
+      } finally {
+        setIsRefining(false);
+      }
+
     }
     dbCall();
   };
@@ -176,22 +190,35 @@ const PromptRefinement = () => {
                         )}
                       </Button>
                     </div>
-                    {isInputFullScreen ? <><ProgressCircle.Root value={10} size={"xl"} colorPalette={"green"}>
-                      <ProgressCircle.Circle>
-                        <ProgressCircle.Track />
-                        <ProgressCircle.Range strokeLinecap={'round'} />
-                      </ProgressCircle.Circle>
-                      <AbsoluteCenter>
-                        <ProgressCircle.ValueText />
-                      </AbsoluteCenter>
-                    </ProgressCircle.Root></> : ''}
+                    {isInputFullScreen ? <div className="px-3 py-10 flex gap-3">
+                      <CircularProgressBar sqSize={180} strokeWidth={18} percentage={userPercentage}></CircularProgressBar>
+                      <div
+                        className="
+                        inline-block
+                        bg-background
+                        text-white
+                        pl-3 py-2
+                        rounded-2xl
+                        break-words
+                        min-w-[440px]
+                        max-w-[440px]
+                        sm:max-w-sm md:max-w-md lg:max-w-lg
+                        text-sm sm:text-base md:text-md
+                        transition-all duration-300 ease-in-out                      
+                        ">
+                        <div className={`flex h-full text-muted-foreground ${userFeedback ? "text-white" : ""}`}>
+                          {/* <p>Feedback and area`s to improve</p> */}
+                          {userFeedback}
+                        </div>
+                      </div>
+                    </div> : ''}
                   </CardEnhancedContent>
                 </CardEnhanced>
               )}
 
               {/* Output Section */}
               {!isInputFullScreen && (
-                <CardEnhanced variant="gold" className={`relative h-fit ${isOutputFullScreen ? "fixed top-10 right-10 bottom-10 z-50 md:w-1/2 h-auto" : ""}`}>
+                <CardEnhanced variant="gold" className={`relative h-50 ${isOutputFullScreen ? "fixed top-10 right-10 bottom-10 z-50 md:w-1/2 h-auto" : ""}`}>
                   <Button variant="ghost" size="icon" className="absolute top-2 right-2 z-50" onClick={() => setIsOutputFullScreen(!isOutputFullScreen)}>
                     {isOutputFullScreen ? <Minimize2 className="w-4 h-4"></Minimize2> : <Maximize2 className="w-4 h-4"></Maximize2>}
                   </Button>
@@ -230,6 +257,28 @@ const PromptRefinement = () => {
                         </div>
                       )}
                     </div>
+                    {isOutputFullScreen ? <div className="px-3 py-10 flex gap-3">
+                      <CircularProgressBar sqSize={180} strokeWidth={18} percentage={backendPercentage}></CircularProgressBar>
+                      <div
+                        className="
+                        inline-block
+                        bg-background
+                        text-white
+                        pl-3 py-2
+                        rounded-2xl
+                        break-words
+                        min-w-[440px]
+                        max-w-[440px]
+                        sm:max-w-sm md:max-w-md lg:max-w-lg
+                        text-sm sm:text-base md:text-md
+                        transition-all duration-300 ease-in-out                      
+                        ">
+                        <div className={`flex h-full text-muted-foreground ${refinedFeedback ? "text-white" : ""}`}>
+                          {/* <p>Feedback and area`s to improve</p> */}
+                          {refinedFeedback}
+                        </div>
+                      </div>
+                    </div> : ''}
                   </CardEnhancedContent>
                 </CardEnhanced>
               )}
