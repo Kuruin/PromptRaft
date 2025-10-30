@@ -27,7 +27,7 @@ router.post("/secret-optimize", async (req, res) => {
     const parsedBody = req.body;
     const { prompt } = parsedBody;
     const response = await ai.models.generateContent({
-        model: "gemini-2.5-pro",
+        model: "gemini-2.5-flash",
         contents: prompt,
         config: {
             systemInstruction: process.env.SECRET_PROMPT,
@@ -35,7 +35,8 @@ router.post("/secret-optimize", async (req, res) => {
     });
     res.json({
         score: response.text.split("\n")[0] || '0/100',
-        feedback: response.text.split("\n")[1] || "We are working on it "
+        feedback: response.text.split("\n")[1] || "We are working on it ",
+        text: response.text
     });
 })
 
