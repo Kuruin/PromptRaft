@@ -54,7 +54,7 @@ const PromptRefinement = () => {
         if (dbCall.data) {
           setRefinedPrompt(dbCall.data.response);
           setIsRefining(false);
-          setUserXP(prev => prev + 25);
+          setUserXP(prev => prev + 54);
           toast.success("Prompt refined successfully! +25 XP earned");
         }
 
@@ -84,6 +84,14 @@ const PromptRefinement = () => {
     navigator.clipboard.writeText(text);
     toast.success("Copied to clipboard!");
   };
+
+  useEffect(() => {
+    const requiredXP = userLevel * 200;
+    if (userXP >= requiredXP) {
+      setUserXP(prevXP => prevXP - requiredXP); // carry over remaining XP
+      setUserLevel(prevLevel => prevLevel + 1); // increase level
+    }
+  }, [userXP, userLevel]);
 
   const nextLevelXP = userLevel * 200;
   const xpProgress = (userXP / nextLevelXP) * 100;
