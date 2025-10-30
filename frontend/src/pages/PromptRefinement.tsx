@@ -24,7 +24,7 @@ const PromptRefinement = () => {
 
   const [isRefining, setIsRefining] = useState(false);
   const [userLevel, setUserLevel] = useState(1);
-  const [userXP, setUserXP] = useState(150);
+  const [userXP, setUserXP] = useState(10);
   const [userStreak, setUserStreak] = useState(0);
   const [isInputFullScreen, setIsInputFullScreen] = useState(false);
   const [isOutputFullScreen, setIsOutputFullScreen] = useState(false);
