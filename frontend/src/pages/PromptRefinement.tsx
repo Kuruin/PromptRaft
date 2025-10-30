@@ -367,7 +367,7 @@ const PromptRefinement = () => {
                     <div className="p-3 bg-muted rounded-lg">
                       <em>"Make me something creative"</em>
                     </div>
-                    <Button variant="challenge" className="w-full">
+                    <Button variant="challenge" className="w-full" onClick={() => toast.error("YOU ARE NOT YET READYSOLDIER!")}>
                       Start Challenge (+50 XP)
                     </Button>
                   </div>
