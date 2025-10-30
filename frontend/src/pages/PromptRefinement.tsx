@@ -11,10 +11,13 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import axios from 'axios'
 import { Minimize2, Maximize2 } from "lucide-react";
+import { AbsoluteCenter, ProgressCircle } from "@chakra-ui/react"
 
 const PromptRefinement = () => {
   const [originalPrompt, setOriginalPrompt] = useState("");
   const [refinedPrompt, setRefinedPrompt] = useState("");
+  const [userOutput, setUserOutput] = useState("");
+  const [refinedOutput, setRefinedOutput] = useState("");
   const [isRefining, setIsRefining] = useState(false);
   const [userLevel, setUserLevel] = useState(1);
   const [userXP, setUserXP] = useState(150);
@@ -45,6 +48,16 @@ const PromptRefinement = () => {
       })
       setRefinedPrompt(dbCall.data.response);
       setIsRefining(false);
+
+      const userDbCall = await axios.post("http://localhost:3000/api/v1/user/secret-optimize", {
+        prompt: originalPrompt
+      });
+      setUserOutput(userDbCall.data.response);
+
+      const outputDbCall = await axios.post("http://localhost:3000/api/v1/user/secret-optimize", {
+        prompt: refinedPrompt
+      });
+      setRefinedOutput(userDbCall.data.response);
 
       // Gamification: Add XP
       setUserXP(prev => prev + 25);
@@ -163,6 +176,15 @@ const PromptRefinement = () => {
                         )}
                       </Button>
                     </div>
+                    {isInputFullScreen ? <><ProgressCircle.Root value={10} size={"xl"} colorPalette={"green"}>
+                      <ProgressCircle.Circle>
+                        <ProgressCircle.Track />
+                        <ProgressCircle.Range strokeLinecap={'round'} />
+                      </ProgressCircle.Circle>
+                      <AbsoluteCenter>
+                        <ProgressCircle.ValueText />
+                      </AbsoluteCenter>
+                    </ProgressCircle.Root></> : ''}
                   </CardEnhancedContent>
                 </CardEnhanced>
               )}
