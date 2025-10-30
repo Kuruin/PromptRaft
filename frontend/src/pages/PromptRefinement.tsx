@@ -20,7 +20,7 @@ const PromptRefinement = () => {
   const [refinedFeedback, setRefinedFeedback] = useState("");
 
   const [userPercentage, setUserPercentage] = useState(0);
-  const [backendPercentage, setBackendPercentage] = useState(14);
+  const [backendPercentage, setBackendPercentage] = useState(0);
 
   const [isRefining, setIsRefining] = useState(false);
   const [userLevel, setUserLevel] = useState(1);
