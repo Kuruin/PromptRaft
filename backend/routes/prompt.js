@@ -156,4 +156,25 @@ router.delete("/:id/version/:versionId", authMiddleware, async (req, res) => {
     }
 });
 
+// Delete ENTIRE Project
+router.delete("/:id", authMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Verify ownership
+        const prompt = await Prompt.findOne({ _id: id, userId: req.userId });
+        if (!prompt) return res.status(404).json({ error: "Prompt not found" });
+
+        // Delete all versions
+        await PromptVersion.deleteMany({ promptId: id });
+
+        // Delete the project itself
+        await Prompt.deleteOne({ _id: id });
+
+        res.json({ msg: "Project deleted" });
+    } catch (e) {
+        res.status(500).json({ error: "Failed to delete project" });
+    }
+});
+
 module.exports = router;

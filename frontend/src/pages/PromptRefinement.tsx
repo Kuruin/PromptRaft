@@ -4,7 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { CardEnhanced, CardEnhancedContent, CardEnhancedDescription, CardEnhancedHeader, CardEnhancedTitle } from "@/components/ui/card-enhanced";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Wand2, Copy, RefreshCw, Sparkles, Trophy, Target, BookOpen, Save, History as HistoryIcon, Layout } from "lucide-react";
+import { Wand2, Copy, RefreshCw, Sparkles, Trophy, Target, BookOpen, Save, History as HistoryIcon, Layout, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -178,6 +178,20 @@ const PromptRefinement = () => {
     }
   };
 
+  const handleDeleteProject = async () => {
+    if (!selectedPromptId) return;
+    if (confirm("Are you sure you want to delete this ENTIRE project? This cannot be undone.")) {
+      try {
+        await axios.delete(`http://localhost:3000/api/v1/prompts/${selectedPromptId}`);
+        toast.success("Project deleted");
+        await fetchPrompts();
+        handleNewProject();
+      } catch (e) {
+        toast.error("Failed to delete project");
+      }
+    }
+  };
+
   const handleRefinePrompt = async () => {
     if (!originalPrompt.trim()) {
       toast.error("Please enter a prompt to refine!");
@@ -335,9 +349,22 @@ const PromptRefinement = () => {
                 </Button>
               )}
               <div>
-                <h1 className="text-3xl font-bold text-foreground mb-2">
-                  {selectedPromptId ? "Project Workspace" : "Prompt Refinement Studio"}
-                </h1>
+                <div className="flex items-center gap-3 mb-2">
+                  <h1 className="text-3xl font-bold text-foreground">
+                    {selectedPromptId ? "Project Workspace" : "Prompt Refinement Studio"}
+                  </h1>
+                  {selectedPromptId && (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={handleDeleteProject}
+                      className="h-8 w-8 p-0 rounded-full"
+                      title="Delete Project"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
                 <p className="text-muted-foreground">Transform your prompts into powerful instructions</p>
               </div>
             </div>
