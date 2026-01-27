@@ -37,9 +37,33 @@ const userSchema = new mongoose.Schema({
         required: true,
         trim: true,
         maxLength: 50
-    }
+    },
+    xp: { type: Number, default: 0 },
+    level: { type: Number, default: 1 },
+    streak: { type: Number, default: 0 },
+    lastLoginDate: { type: Date, default: Date.now }
 });
 
-const User = mongoose.model("User", userSchema)
+const promptSchema = new mongoose.Schema({
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    title: { type: String, required: true },
+    description: String,
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now }
+});
 
-module.exports = { connectDb, User }
+const promptVersionSchema = new mongoose.Schema({
+    promptId: { type: mongoose.Schema.Types.ObjectId, ref: 'Prompt', required: true },
+    versionNumber: { type: Number, required: true },
+    content: { type: String, required: true },
+    refinedContent: { type: String }, // Stores the AI's output for this version
+    aiFeedback: String,
+    aiScore: Number,
+    createdAt: { type: Date, default: Date.now }
+});
+
+const User = mongoose.model("User", userSchema);
+const Prompt = mongoose.model("Prompt", promptSchema);
+const PromptVersion = mongoose.model("PromptVersion", promptVersionSchema);
+
+module.exports = { connectDb, User, Prompt, PromptVersion }

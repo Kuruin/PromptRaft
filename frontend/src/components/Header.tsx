@@ -2,8 +2,11 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Sparkles } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
 
 export default function Header() {
+  const { isAuthenticated, logout } = useAuth();
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/60 dark:bg-[#121212]">
       <div className="container flex h-16 items-center justify-between">
@@ -22,9 +25,17 @@ export default function Header() {
             Prompt Refiner
           </Link>
           <ThemeToggle />
-          <Button asChild variant="ocean">
-            <Link to="/prompt-refine">Try Now</Link>
-          </Button>
+          {isAuthenticated ? (
+            <Button variant="outline" onClick={logout}>
+              Logout
+            </Button>
+          ) : (
+            <div className="flex gap-2">
+              <Button asChild variant="ocean">
+                <Link to="/login">Get Started</Link>
+              </Button>
+            </div>
+          )}
         </nav>
       </div>
     </header>
