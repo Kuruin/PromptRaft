@@ -252,6 +252,65 @@ const PromptRefinement = () => {
     toast.success("Copied to clipboard!");
   };
 
+  const getRankTitle = (lvl: number) => {
+    const titles = [
+      "Unranked", // 0
+      "Paper Raft Builder", // 1
+      "Driftwood Collector", // 2
+      "Stream Paddler", // 3
+      "River Navigator", // 4
+      "Rapid Rider", // 5
+      "Current Watcher", // 6
+      "Prompt Tinkerer", // 7
+      "Context Seeker", // 8
+      "Token Counter", // 9
+      "Apprentice Scribe", // 10
+      "Logic Weaver", // 11
+      "Syntax Shaper", // 12
+      "Instruction Crafter", // 13
+      "Model Whisperer", // 14
+      "Pattern Recognizer", // 15
+      "Chain of Thought Guide", // 16
+      "Few-Shot Learner", // 17
+      "Zero-Shot Specialist", // 18
+      "Hallucination Tamer", // 19
+      "Prompt Engineer", // 20
+      "System Prompt Architect", // 21
+      "Context Window Keeper", // 22
+      "Token Optimizer", // 23
+      "Vector voyager", // 24
+      "Embedding Explorer", // 25
+      "Latency Reducer", // 26
+      "Temperature Tuner", // 27
+      "Top-K Strategist", // 28
+      "Top-P Tactician", // 29
+      "Prompt Master", // 30
+      "Fine-Tuning Expert", // 31
+      "RLHF Specialist", // 32
+      "Transformer Trainer", // 33
+      "Attention Mechanism Guru", // 34
+      "Neural Network Navigator", // 35
+      "Generative Genius", // 36
+      "AI Collaborator", // 37
+      "Digital Muse", // 38
+      "Code Synthesis Savant", // 39
+      "Creative Spark", // 40
+      "Prompt Grandmaster", // 41
+      "Language Lord", // 42
+      "Token Titan", // 43
+      "Context Commander", // 44
+      "Prompt Prophet", // 45
+      "AI Whisperer", // 46
+      "Singularity Seeker", // 47
+      "AGI Architect", // 48
+      "Superintelligence Guide", // 49
+      "Ascended Prompter" // 50
+    ];
+
+    if (lvl <= 50) return titles[lvl] || `Level ${lvl} Explorer`;
+    return `Level ${lvl} Legend`;
+  };
+
   return (
     <div className="min-h-screen dark:bg-[#1a1a1a] flex flex-col">
       <Header />
@@ -575,7 +634,7 @@ const PromptRefinement = () => {
                   <CardEnhancedContent className="pt-6">
                     <Trophy className="w-12 h-12 text-gold-accent mx-auto mb-4" />
                     <h3 className="text-2xl font-bold text-ocean-primary">Level {level}</h3>
-                    <p className="text-muted-foreground">Prompt Apprentice</p>
+                    <p className="text-muted-foreground">{getRankTitle(level)}</p>
                   </CardEnhancedContent>
                 </CardEnhanced>
 
