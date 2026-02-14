@@ -18,6 +18,14 @@ interface DraggableBentoGridProps {
 export const DraggableBentoGrid = ({ children, defaultLayout }: DraggableBentoGridProps) => {
     const [isDraggable, setIsDraggable] = useState(false);
     const [layout, setLayout] = useState(defaultLayout);
+    // Explicitly compute static layout to prevent any dragging/resizing when locked
+    const displayLayout = layout.map(item => ({
+        ...item,
+        static: !isDraggable,
+        isDraggable: isDraggable,
+        isResizable: isDraggable
+    }));
+
     const [width, setWidth] = useState(1200);
     const containerRef = useRef<HTMLDivElement>(null);
     const [mounted, setMounted] = useState(false);
@@ -68,7 +76,7 @@ export const DraggableBentoGrid = ({ children, defaultLayout }: DraggableBentoGr
     }
 
     return (
-        <div className="space-y-4" ref={containerRef}>
+        <div className={`space-y-4 ${isDraggable ? 'is-draggable' : ''}`} ref={containerRef}>
             <div className="flex justify-end gap-2 mb-2">
                 {isDraggable && (
                     <Button variant="outline" size="sm" onClick={handleResetLayout}>
@@ -98,14 +106,22 @@ export const DraggableBentoGrid = ({ children, defaultLayout }: DraggableBentoGr
             {mounted && width > 0 && (
                 <Responsive
                     className="layout"
-                    layouts={{ lg: layout, md: layout, sm: layout }}
+                    layouts={{ lg: displayLayout, md: displayLayout, sm: displayLayout }}
                     breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
                     cols={{ lg: 3, md: 3, sm: 2, xs: 1, xxs: 1 }}
                     rowHeight={150}
                     width={width}
                     isDraggable={isDraggable}
                     isResizable={isDraggable}
-                    onLayoutChange={(layout: any) => handleLayoutChange(layout)}
+                    // Use a key to force re-render when draggable state changes if needed, 
+                    // keeping consistency with static prop
+                    key={isDraggable ? 'draggable' : 'static'}
+                    onLayoutChange={(newLayout) => {
+                        // Only update if draggable to avoid persisting static flags or temporary states
+                        if (isDraggable) {
+                            handleLayoutChange(newLayout);
+                        }
+                    }}
                     margin={[16, 16]}
                     draggableHandle=".drag-handle"
                 >
@@ -133,6 +149,14 @@ export const DraggableBentoGrid = ({ children, defaultLayout }: DraggableBentoGr
                  /* Hide resize handle when not draggable */
                  .react-grid-item:not(.react-grid-placeholder) > .react-resizable-handle {
                     display: ${isDraggable ? 'block' : 'none'};
+                 }
+                 /* Hide drag handle when not draggable */
+                 .is-draggable .drag-handle {
+                    cursor: move;
+                 }
+                 .space-y-4:not(.is-draggable) .drag-handle {
+                    display: none;
+                    pointer-events: none;
                  }
             `}</style>
         </div>
