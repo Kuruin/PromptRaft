@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { CardEnhanced, CardEnhancedContent, CardEnhancedHeader, CardEnhancedTitle, CardEnhancedDescription } from "@/components/ui/card-enhanced";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
+import { EyeOff, Eye } from "lucide-react";
 import axios from "axios";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -15,6 +16,7 @@ const Signup = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [visiblePassword, setVisiblePassword] = useState(false);
     const { login } = useAuth();
     const navigate = useNavigate();
 
@@ -98,16 +100,28 @@ const Signup = () => {
                                     required
                                 />
                             </div>
-                            <div className="space-y-2">
+                            <div className="space-y-2 relative">
                                 <label className="text-sm font-medium">Password</label>
                                 <Input
-                                    type="password"
+                                    type={visiblePassword ? "text" : "password"}
                                     placeholder="••••••••"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
                                     minLength={6}
+                                    className="pr-10"
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setVisiblePassword(!visiblePassword)}
+                                    className="absolute right-3 top-11 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
+                                >
+                                    {visiblePassword ? (
+                                        <Eye className="h-4 w-4" />
+                                    ) : (
+                                        <EyeOff className="h-4 w-4" />
+                                    )}
+                                </button>
                             </div>
                             <Button type="submit" className="w-full" disabled={isLoading} variant="ocean">
                                 {isLoading ? "Creating Account..." : "Sign Up"}
