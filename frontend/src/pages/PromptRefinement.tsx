@@ -721,16 +721,19 @@ const PromptRefinement = () => {
                         Today's task
                       </CardEnhancedDescription>
                     </CardEnhancedHeader>
-                    <CardEnhancedContent className="flex flex-col justify-between h-full pb-4">
-                      <div className="space-y-2 overflow-y-auto max-h-[120px]">
+                    <CardEnhancedContent className="flex flex-col flex-1 h-full min-h-0 pb-4 overflow-hidden">
+                      <div className="space-y-2 flex-1 min-h-0 overflow-y-auto pr-1">
                         <p className="text-xs">
                           <strong>Transform current prompt:</strong>
                         </p>
                         <div className="p-2 bg-muted rounded text-xs italic">
                           "Make me something creative"
                         </div>
+                        <div className="p-2 bg-muted rounded text-xs italic">
+                          "Make me something creative"
+                        </div>
                       </div>
-                      <Button variant="challenge" size="sm" className="w-full mt-2" onClick={() => toast.error("YOU ARE NOT YET READY SOLDIER!")}>
+                      <Button variant="challenge" size="sm" className="w-full mt-2 shrink-0" onClick={() => toast.error("YOU ARE NOT YET READY SOLDIER!")}>
                         Start (+50 XP)
                       </Button>
                     </CardEnhancedContent>
@@ -749,7 +752,7 @@ const PromptRefinement = () => {
                         Mastery Path
                       </CardEnhancedDescription>
                     </CardEnhancedHeader>
-                    <CardEnhancedContent className="overflow-y-auto">
+                    <CardEnhancedContent className="flex-1 min-h-0 overflow-y-auto pr-1 pb-2">
                       <div className="space-y-2">
                         <div className="flex items-center justify-between p-2 bg-ocean-mist/20 rounded">
                           <span className="text-xs font-medium">Basics</span>
@@ -761,6 +764,10 @@ const PromptRefinement = () => {
                         </div>
                         <div className="flex items-center justify-between p-2 bg-muted/50 rounded opacity-60">
                           <span className="text-xs font-medium">Advanced</span>
+                          <Badge variant="secondary" className="text-[9px] px-1 h-4">Locked</Badge>
+                        </div>
+                        <div className="flex items-center justify-between p-2 bg-muted/50 rounded opacity-60">
+                          <span className="text-xs font-medium">Expert</span>
                           <Badge variant="secondary" className="text-[9px] px-1 h-4">Locked</Badge>
                         </div>
                       </div>
