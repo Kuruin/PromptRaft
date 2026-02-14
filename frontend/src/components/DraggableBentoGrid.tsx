@@ -142,10 +142,19 @@ export const DraggableBentoGrid = ({ children, defaultLayout }: DraggableBentoGr
                     box-shadow: 0 0 10px rgba(0,0,0,0.2);
                 }
                 .react-grid-placeholder {
-                    background: rgba(var(--ocean-primary), 0.2) !important;
+                    background: rgba(122, 93, 236, 1) !important; /* Filled with shadow color */
                     border-radius: 0.5rem;
-                    opacity: 0.5;
+                    opacity: 0.8; /* Increased opacity for better visibility */
+                    box-shadow: 0 0 20px 5px rgba(122, 93, 236, 1); /* Lighter Violet/Blue shadow */
+                    transition-duration: 300ms;
+                    transition-property: transform, opacity, box-shadow;
+                    transition-timing-function: ease-out;
+                    z-index: 50;
                 }
+                 /* Make the shadow delayed */
+                 .react-grid-item.react-grid-placeholder {
+                    transition-delay: 100ms; 
+                 }
                  /* Hide resize handle when not draggable */
                  .react-grid-item:not(.react-grid-placeholder) > .react-resizable-handle {
                     display: ${isDraggable ? 'block' : 'none'};
