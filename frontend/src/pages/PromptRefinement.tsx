@@ -342,7 +342,7 @@ const PromptRefinement = () => {
         <div className="flex-1 max-w-7xl mx-auto px-6 py-8 w-full">
           {/* User Progress Bar */}
           <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 ">
               {isAuthenticated && (
                 <Button variant="ghost" size="icon" onClick={() => setShowSidebar(!showSidebar)}>
                   <Layout className="w-5 h-5" />
