@@ -404,7 +404,7 @@ const PromptRefinement = () => {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="refine" className="space-y-8">
+            <TabsContent value="refine" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-in-out">
               {/* Version Controls */}
               {selectedPromptId && versions.length > 0 && (
                 <div className="flex items-center justify-between bg-muted/30 p-4 rounded-lg">
@@ -654,7 +654,7 @@ const PromptRefinement = () => {
               </CardEnhanced>
             </TabsContent>
 
-            <TabsContent value="learn" className="space-y-8">
+            <TabsContent value="learn" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-in-out">
               {/* Learning Dashboard */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <CardEnhanced variant="ocean" className="text-center">
