@@ -1,4 +1,6 @@
 import { useEffect, useState, useRef } from "react";
+// Removed unused imports since they are handled in the child component now
+import { Lock, Unlock, RotateCcw, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { CardEnhanced, CardEnhancedContent, CardEnhancedDescription, CardEnhancedHeader, CardEnhancedTitle } from "@/components/ui/card-enhanced";
@@ -13,6 +15,7 @@ import { Minimize2, Maximize2 } from "lucide-react";
 import CircularProgressBar from "@/components/Circular-bar";
 import { useAuth } from "@/context/AuthContext";
 import { PromptSidebar } from "@/components/PromptSidebar";
+import { DraggableBentoGrid } from "@/components/DraggableBentoGrid";
 import {
   Select,
   SelectContent,
@@ -655,82 +658,116 @@ const PromptRefinement = () => {
             </TabsContent>
 
             <TabsContent value="learn" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-in-out">
-              {/* Learning Dashboard */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <CardEnhanced variant="ocean" className="text-center">
-                  <CardEnhancedContent className="pt-6">
-                    <Trophy className="w-12 h-12 text-gold-accent mx-auto mb-4" />
-                    <h3 className="text-2xl font-bold text-ocean-primary">Level {level}</h3>
-                    <p className="text-muted-foreground">{getRankTitle(level)}</p>
-                  </CardEnhancedContent>
-                </CardEnhanced>
+              <DraggableBentoGrid
+                defaultLayout={[
+                  { i: "level", x: 0, y: 0, w: 1, h: 1 },
+                  { i: "xp", x: 1, y: 0, w: 1, h: 1 },
+                  { i: "streak", x: 2, y: 0, w: 1, h: 1 },
+                  { i: "challenge", x: 0, y: 1, w: 2, h: 2 },
+                  { i: "modules", x: 2, y: 1, w: 1, h: 2 },
+                ]}
+              >
+                {/* Level Card */}
+                <div key="level" className="h-full">
+                  <CardEnhanced variant="ocean" className="text-center h-full flex flex-col relative group">
+                    <div className="drag-handle absolute top-2 right-2 cursor-move opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10 rounded">
+                      <GripVertical className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                    <CardEnhancedContent className="pt-6 flex flex-col items-center justify-center h-full">
+                      <Trophy className="w-8 h-8 text-gold-accent mb-2" />
+                      <h3 className="text-xl font-bold text-ocean-primary">Level {level}</h3>
+                      <p className="text-xs text-muted-foreground">{getRankTitle(level)}</p>
+                    </CardEnhancedContent>
+                  </CardEnhanced>
+                </div>
 
-                <CardEnhanced variant="gold" className="text-center">
-                  <CardEnhancedContent className="pt-6">
-                    <Sparkles className="w-12 h-12 text-ocean-primary mx-auto mb-4" />
-                    <h3 className="text-2xl font-bold text-ocean-primary">{xp}</h3>
-                    <p className="text-muted-foreground">Total XP Earned</p>
-                  </CardEnhancedContent>
-                </CardEnhanced>
+                {/* XP Card */}
+                <div key="xp" className="h-full">
+                  <CardEnhanced variant="gold" className="text-center h-full flex flex-col relative group">
+                    <div className="drag-handle absolute top-2 right-2 cursor-move opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10 rounded">
+                      <GripVertical className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                    <CardEnhancedContent className="pt-6 flex flex-col items-center justify-center h-full">
+                      <Sparkles className="w-8 h-8 text-ocean-primary mb-2" />
+                      <h3 className="text-xl font-bold text-ocean-primary">{xp}</h3>
+                      <p className="text-xs text-muted-foreground">Total XP Earned</p>
+                    </CardEnhancedContent>
+                  </CardEnhanced>
+                </div>
 
-                <CardEnhanced variant="glass" className="text-center">
-                  <CardEnhancedContent className="pt-6">
-                    <Target className="w-12 h-12 text-gold-accent mx-auto mb-4" />
-                    <h3 className="text-2xl font-bold text-ocean-primary">{streak}</h3>
-                    <p className="text-muted-foreground">Day Streak</p>
-                  </CardEnhancedContent>
-                </CardEnhanced>
-              </div>
+                {/* Streak Card */}
+                <div key="streak" className="h-full">
+                  <CardEnhanced variant="glass" className="text-center h-full flex flex-col relative group">
+                    <div className="drag-handle absolute top-2 right-2 cursor-move opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10 rounded">
+                      <GripVertical className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                    <CardEnhancedContent className="pt-6 flex flex-col items-center justify-center h-full">
+                      <Target className="w-8 h-8 text-gold-accent mb-2" />
+                      <h3 className="text-xl font-bold text-ocean-primary">{streak}</h3>
+                      <p className="text-xs text-muted-foreground">Day Streak</p>
+                    </CardEnhancedContent>
+                  </CardEnhanced>
+                </div>
 
-              {/* Learning Modules */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <CardEnhanced variant="ocean">
-                  <CardEnhancedHeader>
-                    <CardEnhancedTitle>🎯 Daily Challenge</CardEnhancedTitle>
-                    <CardEnhancedDescription>
-                      Complete today's prompt engineering challenge
-                    </CardEnhancedDescription>
-                  </CardEnhancedHeader>
-                  <CardEnhancedContent>
-                    <div className="space-y-4">
-                      <p className="text-sm">
-                        <strong>Challenge:</strong> Transform this vague prompt into a specific, actionable one:
-                      </p>
-                      <div className="p-3 bg-muted rounded-lg">
-                        <em>"Make me something creative"</em>
+                {/* Daily Challenge */}
+                <div key="challenge" className="h-full">
+                  <CardEnhanced variant="ocean" className="h-full flex flex-col relative group">
+                    <div className="drag-handle absolute top-2 right-2 cursor-move opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10 rounded z-10">
+                      <GripVertical className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                    <CardEnhancedHeader className="pb-2">
+                      <CardEnhancedTitle className="text-lg">🎯 Daily Challenge</CardEnhancedTitle>
+                      <CardEnhancedDescription className="text-xs">
+                        Today's task
+                      </CardEnhancedDescription>
+                    </CardEnhancedHeader>
+                    <CardEnhancedContent className="flex flex-col justify-between h-full pb-4">
+                      <div className="space-y-2 overflow-y-auto max-h-[120px]">
+                        <p className="text-xs">
+                          <strong>Transform current prompt:</strong>
+                        </p>
+                        <div className="p-2 bg-muted rounded text-xs italic">
+                          "Make me something creative"
+                        </div>
                       </div>
-                      <Button variant="challenge" className="w-full" onClick={() => toast.error("YOU ARE NOT YET READYSOLDIER!")}>
-                        Start Challenge (+50 XP)
+                      <Button variant="challenge" size="sm" className="w-full mt-2" onClick={() => toast.error("YOU ARE NOT YET READY SOLDIER!")}>
+                        Start (+50 XP)
                       </Button>
-                    </div>
-                  </CardEnhancedContent>
-                </CardEnhanced>
+                    </CardEnhancedContent>
+                  </CardEnhanced>
+                </div>
 
-                <CardEnhanced variant="glass">
-                  <CardEnhancedHeader>
-                    <CardEnhancedTitle>📚 Learning Modules</CardEnhancedTitle>
-                    <CardEnhancedDescription>
-                      Master prompt engineering step by step
-                    </CardEnhancedDescription>
-                  </CardEnhancedHeader>
-                  <CardEnhancedContent>
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between p-3 bg-ocean-mist/20 rounded-lg">
-                        <span className="text-sm font-medium">Basics of Prompt Writing</span>
-                        <Badge>Completed</Badge>
-                      </div>
-                      <div className="flex items-center justify-between p-3 bg-ocean-mist/20 rounded-lg">
-                        <span className="text-sm font-medium">Adding Context & Examples</span>
-                        <Badge variant="outline">In Progress</Badge>
-                      </div>
-                      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg opacity-60">
-                        <span className="text-sm font-medium">Advanced Techniques</span>
-                        <Badge variant="secondary">Locked</Badge>
-                      </div>
+                {/* Learning Modules */}
+                <div key="modules" className="h-full">
+                  <CardEnhanced variant="glass" className="h-full flex flex-col relative group">
+                    <div className="drag-handle absolute top-2 right-2 cursor-move opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10 rounded z-10">
+                      <GripVertical className="w-4 h-4 text-muted-foreground" />
                     </div>
-                  </CardEnhancedContent>
-                </CardEnhanced>
-              </div>
+                    <CardEnhancedHeader className="pb-2">
+                      <CardEnhancedTitle className="text-lg">📚 Modules</CardEnhancedTitle>
+                      <CardEnhancedDescription className="text-xs">
+                        Mastery Path
+                      </CardEnhancedDescription>
+                    </CardEnhancedHeader>
+                    <CardEnhancedContent className="overflow-y-auto">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between p-2 bg-ocean-mist/20 rounded">
+                          <span className="text-xs font-medium">Basics</span>
+                          <Badge className="text-[9px] px-1 h-4">Done</Badge>
+                        </div>
+                        <div className="flex items-center justify-between p-2 bg-ocean-mist/20 rounded">
+                          <span className="text-xs font-medium">Context</span>
+                          <Badge variant="outline" className="text-[9px] px-1 h-4">Active</Badge>
+                        </div>
+                        <div className="flex items-center justify-between p-2 bg-muted/50 rounded opacity-60">
+                          <span className="text-xs font-medium">Advanced</span>
+                          <Badge variant="secondary" className="text-[9px] px-1 h-4">Locked</Badge>
+                        </div>
+                      </div>
+                    </CardEnhancedContent>
+                  </CardEnhanced>
+                </div>
+              </DraggableBentoGrid>
             </TabsContent>
           </Tabs>
         </div>
