@@ -422,7 +422,7 @@ const PromptRefinement = () => {
           />
         )}
 
-        <div className="flex-1 max-w-7xl mx-auto px-6 py-8 w-full">
+        <div className="flex-1 px-6 py-8 w-full">
           {/* User Progress Bar */}
           <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-4 ">
@@ -779,10 +779,10 @@ const PromptRefinement = () => {
                     <div className="drag-handle absolute top-2 right-2 cursor-move opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10 rounded">
                       <GripVertical className="w-4 h-4 text-muted-foreground" />
                     </div>
-                    <CardEnhancedContent className="pt-6 flex flex-col items-center justify-center h-full">
-                      <Trophy className="w-8 h-8 text-gold-accent mb-2" />
-                      <h3 className="text-xl font-bold text-ocean-primary">Level {level}</h3>
-                      <p className="text-xs text-muted-foreground">{getRankTitle(level)}</p>
+                    <CardEnhancedContent className="p-3 flex flex-col items-center justify-center h-full">
+                      <Trophy className="w-10 h-10 text-gold-accent mb-3" />
+                      <h3 className="text-2xl font-bold text-ocean-primary">Level {level}</h3>
+                      <p className="text-sm font-medium text-muted-foreground mt-1">{getRankTitle(level)}</p>
                     </CardEnhancedContent>
                   </CardEnhanced>
                 </div>
@@ -793,10 +793,10 @@ const PromptRefinement = () => {
                     <div className="drag-handle absolute top-2 right-2 cursor-move opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10 rounded">
                       <GripVertical className="w-4 h-4 text-muted-foreground" />
                     </div>
-                    <CardEnhancedContent className="pt-6 flex flex-col items-center justify-center h-full">
-                      <Sparkles className="w-8 h-8 text-ocean-primary mb-2" />
-                      <h3 className="text-xl font-bold text-ocean-primary">{xp}</h3>
-                      <p className="text-xs text-muted-foreground">Total XP Earned</p>
+                    <CardEnhancedContent className="p-3 flex flex-col items-center justify-center h-full">
+                      <Sparkles className="w-10 h-10 text-ocean-primary mb-3" />
+                      <h3 className="text-2xl font-bold text-ocean-primary">{xp}</h3>
+                      <p className="text-sm font-medium text-muted-foreground mt-1">Total XP Earned</p>
                     </CardEnhancedContent>
                   </CardEnhanced>
                 </div>
@@ -807,10 +807,10 @@ const PromptRefinement = () => {
                     <div className="drag-handle absolute top-2 right-2 cursor-move opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10 rounded">
                       <GripVertical className="w-4 h-4 text-muted-foreground" />
                     </div>
-                    <CardEnhancedContent className="pt-6 flex flex-col items-center justify-center h-full">
-                      <Target className="w-8 h-8 text-gold-accent mb-2" />
-                      <h3 className="text-xl font-bold text-ocean-primary">{streak}</h3>
-                      <p className="text-xs text-muted-foreground">Day Streak</p>
+                    <CardEnhancedContent className="p-3 flex flex-col items-center justify-center h-full">
+                      <Target className="w-10 h-10 text-gold-accent mb-3" />
+                      <h3 className="text-2xl font-bold text-ocean-primary">{streak}</h3>
+                      <p className="text-sm font-medium text-muted-foreground mt-1">Day Streak</p>
                     </CardEnhancedContent>
                   </CardEnhanced>
                 </div>
@@ -821,25 +821,25 @@ const PromptRefinement = () => {
                     <div className="drag-handle absolute top-2 right-2 cursor-move opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10 rounded z-10">
                       <GripVertical className="w-4 h-4 text-muted-foreground" />
                     </div>
-                    <CardEnhancedHeader className="pb-2">
-                      <CardEnhancedTitle className="text-lg">🎯 Daily Challenge</CardEnhancedTitle>
-                      <CardEnhancedDescription className="text-xs">
+                    <CardEnhancedHeader className="p-4 pb-2">
+                      <CardEnhancedTitle className="text-xl">🎯 Daily Challenge</CardEnhancedTitle>
+                      <CardEnhancedDescription className="text-sm mt-1">
                         Today's task
                       </CardEnhancedDescription>
                     </CardEnhancedHeader>
-                    <CardEnhancedContent className="flex flex-col flex-1 h-full min-h-0 pb-4 overflow-hidden">
-                      <div className="space-y-2 flex-1 min-h-0 overflow-y-auto pr-1">
-                        <p className="text-xs">
+                    <CardEnhancedContent className="p-4 pt-1 flex flex-col flex-1 h-full min-h-0 pb-4 overflow-hidden">
+                      <div className="space-y-3 flex-1 min-h-0 overflow-y-auto pr-1">
+                        <p className="text-sm">
                           <strong>Transform current prompt:</strong>
                         </p>
-                        <div className="p-2 bg-muted rounded text-xs italic">
+                        <div className="p-3 bg-muted rounded-md text-sm italic">
                           "Make me something creative"
                         </div>
-                        <div className="p-2 bg-muted rounded text-xs italic">
+                        <div className="p-3 bg-muted rounded-md text-sm italic">
                           "Make me something creative"
                         </div>
                       </div>
-                      <Button variant="challenge" size="sm" className="w-full mt-2 shrink-0" onClick={() => toast.error("YOU ARE NOT YET READY SOLDIER!")}>
+                      <Button variant="challenge" className="w-full mt-4 shrink-0 font-medium" onClick={() => toast.error("YOU ARE NOT YET READY SOLDIER!")}>
                         Start (+50 XP)
                       </Button>
                     </CardEnhancedContent>
@@ -852,29 +852,29 @@ const PromptRefinement = () => {
                     <div className="drag-handle absolute top-2 right-2 cursor-move opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10 rounded z-10">
                       <GripVertical className="w-4 h-4 text-muted-foreground" />
                     </div>
-                    <CardEnhancedHeader className="pb-2">
-                      <CardEnhancedTitle className="text-lg">📚 Modules</CardEnhancedTitle>
-                      <CardEnhancedDescription className="text-xs">
+                    <CardEnhancedHeader className="p-4 pb-2">
+                      <CardEnhancedTitle className="text-xl">📚 Modules</CardEnhancedTitle>
+                      <CardEnhancedDescription className="text-sm mt-1">
                         Mastery Path
                       </CardEnhancedDescription>
                     </CardEnhancedHeader>
-                    <CardEnhancedContent className="flex-1 min-h-0 overflow-y-auto pr-1 pb-2">
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between p-2 bg-ocean-mist/20 rounded">
-                          <span className="text-xs font-medium">Basics</span>
-                          <Badge className="text-[9px] px-1 h-4">Done</Badge>
+                    <CardEnhancedContent className="p-4 pt-1 flex-1 min-h-0 overflow-y-auto pr-1 pb-2">
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between p-3 bg-ocean-mist/20 rounded-md">
+                          <span className="text-sm font-medium">Basics</span>
+                          <Badge className="text-xs px-2 py-0.5">Done</Badge>
                         </div>
-                        <div className="flex items-center justify-between p-2 bg-ocean-mist/20 rounded">
-                          <span className="text-xs font-medium">Context</span>
-                          <Badge variant="outline" className="text-[9px] px-1 h-4">Active</Badge>
+                        <div className="flex items-center justify-between p-3 bg-ocean-mist/20 rounded-md">
+                          <span className="text-sm font-medium">Context</span>
+                          <Badge variant="outline" className="text-xs px-2 py-0.5">Active</Badge>
                         </div>
-                        <div className="flex items-center justify-between p-2 bg-muted/50 rounded opacity-60">
-                          <span className="text-xs font-medium">Advanced</span>
-                          <Badge variant="secondary" className="text-[9px] px-1 h-4">Locked</Badge>
+                        <div className="flex items-center justify-between p-3 bg-muted/50 rounded-md opacity-60">
+                          <span className="text-sm font-medium">Advanced</span>
+                          <Badge variant="secondary" className="text-xs px-2 py-0.5">Locked</Badge>
                         </div>
-                        <div className="flex items-center justify-between p-2 bg-muted/50 rounded opacity-60">
-                          <span className="text-xs font-medium">Expert</span>
-                          <Badge variant="secondary" className="text-[9px] px-1 h-4">Locked</Badge>
+                        <div className="flex items-center justify-between p-3 bg-muted/50 rounded-md opacity-60">
+                          <span className="text-sm font-medium">Expert</span>
+                          <Badge variant="secondary" className="text-xs px-2 py-0.5">Locked</Badge>
                         </div>
                       </div>
                     </CardEnhancedContent>
