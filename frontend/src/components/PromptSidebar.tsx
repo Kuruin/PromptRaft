@@ -33,7 +33,10 @@ export function PromptSidebar({ prompts, selectedId, onSelect, onNew, onRename, 
     const handleSaveEdit = (e?: React.MouseEvent | React.FormEvent) => {
         e?.stopPropagation();
         if (editingId && editTitle.trim() && onRename) {
-            onRename(editingId, editTitle.trim());
+            const originalPrompt = prompts.find(p => p._id === editingId);
+            if (originalPrompt && originalPrompt.title !== editTitle.trim()) {
+                onRename(editingId, editTitle.trim());
+            }
         }
         setEditingId(null);
     };
