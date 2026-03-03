@@ -152,7 +152,6 @@ router.put("/:id/rename", authMiddleware, async (req, res) => {
         if (!prompt) return res.status(404).json({ error: "Prompt not found" });
 
         prompt.title = title.trim();
-        prompt.updatedAt = Date.now();
         await prompt.save();
 
         res.json({ msg: "Project renamed successfully", prompt });
