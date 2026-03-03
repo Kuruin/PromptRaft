@@ -574,7 +574,7 @@ const PromptRefinement = () => {
                             Edit your prompt or select a version
                           </CardEnhancedDescription>
                         </div>
-                        <div className="flex gap-2 mr-6">
+                        <div className="flex gap-2 mr-10">
                           <Button
                             variant="outline"
                             size="icon"
