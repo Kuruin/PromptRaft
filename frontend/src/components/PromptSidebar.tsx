@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus, History, MessageSquare } from "lucide-react";
+import { Plus, MessageSquare, Edit2, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
 
 interface PromptProject {
     _id: string;
@@ -14,10 +16,33 @@ interface PromptSidebarProps {
     selectedId: string | null;
     onSelect: (id: string) => void;
     onNew: () => void;
+    onRename?: (id: string, newTitle: string) => void;
     isOpen: boolean;
 }
 
-export function PromptSidebar({ prompts, selectedId, onSelect, onNew, isOpen }: PromptSidebarProps) {
+export function PromptSidebar({ prompts, selectedId, onSelect, onNew, onRename, isOpen }: PromptSidebarProps) {
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [editTitle, setEditTitle] = useState("");
+
+    const handleStartEdit = (e: React.MouseEvent, prompt: PromptProject) => {
+        e.stopPropagation();
+        setEditingId(prompt._id);
+        setEditTitle(prompt.title);
+    };
+
+    const handleSaveEdit = (e?: React.MouseEvent | React.FormEvent) => {
+        e?.stopPropagation();
+        if (editingId && editTitle.trim() && onRename) {
+            onRename(editingId, editTitle.trim());
+        }
+        setEditingId(null);
+    };
+
+    const handleCancelEdit = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setEditingId(null);
+    };
+
     return (
         <div
             className={cn(
@@ -39,21 +64,63 @@ export function PromptSidebar({ prompts, selectedId, onSelect, onNew, isOpen }: 
                             </div>
                         )}
                         {prompts.map((prompt) => (
-                            <Button
-                                key={prompt._id}
-                                variant={selectedId === prompt._id ? "secondary" : "ghost"}
-                                className={cn(
-                                    "w-full justify-start text-left font-normal truncate",
-                                    selectedId === prompt._id && "bg-muted"
+                            <div key={prompt._id} className="relative group flex items-center">
+                                {editingId === prompt._id ? (
+                                    <div className="flex items-center w-full gap-1 p-1">
+                                        <Input
+                                            value={editTitle}
+                                            onChange={(e) => setEditTitle(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') handleSaveEdit();
+                                                if (e.key === 'Escape') setEditingId(null);
+                                            }}
+                                            autoFocus
+                                            className="h-8 text-sm"
+                                            onClick={(e) => e.stopPropagation()}
+                                        />
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 shrink-0 text-green-500 hover:text-green-600 hover:bg-green-500/10"
+                                            onClick={handleSaveEdit}
+                                        >
+                                            <Check className="w-4 h-4" />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 shrink-0 text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                                            onClick={handleCancelEdit}
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <Button
+                                        variant={selectedId === prompt._id ? "secondary" : "ghost"}
+                                        className={cn(
+                                            "w-full justify-start text-left font-normal truncate group-hover:pr-8 transition-all",
+                                            selectedId === prompt._id && "bg-muted"
+                                        )}
+                                        onClick={() => onSelect(prompt._id)}
+                                    >
+                                        <MessageSquare className="w-4 h-4 mr-2 opacity-70 shrink-0" />
+                                        <span className="truncate">{prompt.title}</span>
+                                    </Button>
                                 )}
-                                onClick={() => onSelect(prompt._id)}
-                            >
-                                <MessageSquare className="w-4 h-4 mr-2 opacity-70" />
-                                <span className="truncate">{prompt.title}</span>
-                                {/* <span className="ml-auto text-xs opacity-50">
-                                {new Date(prompt.updatedAt).toLocaleDateString()}
-                            </span> */}
-                            </Button>
+
+                                {editingId !== prompt._id && onRename && (
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="absolute right-1 w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        onClick={(e) => handleStartEdit(e, prompt)}
+                                        title="Rename Project"
+                                    >
+                                        <Edit2 className="w-3 h-3 text-muted-foreground" />
+                                    </Button>
+                                )}
+                            </div>
                         ))}
                     </div>
                 </ScrollArea>

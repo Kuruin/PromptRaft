@@ -218,6 +218,19 @@ const PromptRefinement = () => {
     }
   };
 
+  const handleRenameProject = async (id: string, newTitle: string) => {
+    try {
+      await axios.put(`http://localhost:3000/api/v1/prompts/${id}/rename`, { title: newTitle }, {
+        withCredentials: true
+      });
+      toast.success("Project renamed successfully!");
+      await fetchPrompts();
+    } catch (e) {
+      toast.error("Failed to rename project");
+      console.error(e);
+    }
+  };
+
   const handleRefinePrompt = async () => {
     if (!originalPrompt.trim()) {
       toast.error("Please enter a prompt to refine!");
@@ -384,6 +397,7 @@ const PromptRefinement = () => {
             selectedId={selectedPromptId}
             onSelect={handleSelectProjectWrapper}
             onNew={handleNewProjectWrapper}
+            onRename={handleRenameProject}
             isOpen={showSidebar}
           />
         )}

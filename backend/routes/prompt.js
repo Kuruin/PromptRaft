@@ -138,6 +138,31 @@ router.post("/:id/version", authMiddleware, async (req, res) => {
 });
 
 
+// Rename a Project
+router.put("/:id/rename", authMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { title } = req.body;
+
+        if (!title || !title.trim()) {
+            return res.status(400).json({ error: "Title is required" });
+        }
+
+        const prompt = await Prompt.findOne({ _id: id, userId: req.userId });
+        if (!prompt) return res.status(404).json({ error: "Prompt not found" });
+
+        prompt.title = title.trim();
+        prompt.updatedAt = Date.now();
+        await prompt.save();
+
+        res.json({ msg: "Project renamed successfully", prompt });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: "Failed to rename project" });
+    }
+});
+
+
 // Delete a Version
 router.delete("/:id/version/:versionId", authMiddleware, async (req, res) => {
     try {
