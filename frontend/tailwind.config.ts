@@ -57,56 +57,40 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        // Custom nautical colors
-        ocean: {
-          deep: "hsl(var(--ocean-deep))",
-          primary: "hsl(var(--ocean-primary))",
-          light: "hsl(var(--ocean-light))",
-          mist: "hsl(var(--ocean-mist))",
+      },
+      fontFamily: {
+        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+        heading: ['Outfit', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'monospace'],
+      },
+    },
+    borderRadius: {
+      lg: "var(--radius)",
+      md: "calc(var(--radius) - 2px)",
+      sm: "calc(var(--radius) - 4px)",
+    },
+    keyframes: {
+      "accordion-down": {
+        from: {
+          height: "0",
         },
-        gold: {
-          accent: "hsl(var(--gold-accent))",
-          light: "hsl(var(--gold-light))",
-        },
-      },
-      backgroundImage: {
-        'gradient-ocean': 'var(--gradient-ocean)',
-        'gradient-waves': 'var(--gradient-waves)',
-        'gradient-gold': 'var(--gradient-gold)',
-      },
-      boxShadow: {
-        'ocean': 'var(--shadow-ocean)',
-        'glow': 'var(--shadow-glow)',
-        'elegant': 'var(--shadow-elegant)',
-      },
-      borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
-      },
-      keyframes: {
-        "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
-        },
-        "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+        to: {
+          height: "var(--radix-accordion-content-height)",
         },
       },
-      animation: {
-        "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
-        "spin-slow": "spin 20s linear infinite",
+      "accordion-up": {
+        from: {
+          height: "var(--radix-accordion-content-height)",
+        },
+        to: {
+          height: "0",
+        },
       },
+    },
+    animation: {
+      "accordion-down": "accordion-down 0.2s ease-out",
+      "accordion-up": "accordion-up 0.2s ease-out",
+      "spin-slow": "spin 20s linear infinite",
     },
   },
   plugins: [require("tailwindcss-animate")],

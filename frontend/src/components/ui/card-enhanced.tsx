@@ -7,10 +7,10 @@ const cardVariants = cva(
   {
     variants: {
       variant: {
-        default: "border-border",
-        ocean: "border-ocean-light dark:border-ocean-light/30 dark:hover:border-ocean-light/70 bg-gradient-to-br from-background to-ocean-mist/20 shadow-ocean hover:shadow-elegant",
-        gold: "border-gold-accent dark:border-gold-accent/30 dark:hover:border-gold-accent/70 bg-gradient-to-br from-background to-gold-light/10 shadow-glow",
-        glass: "border-ocean-light/0 dark:hover:border-ocean-light/70 backdrop-blur-sm shadow-elegant",
+        default: "border-neutral-200 dark:border-neutral-800 bg-background",
+        accent: "border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900",
+        outline: "border-neutral-300 dark:border-neutral-700 bg-transparent hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors",
+        flat: "border-transparent bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors",
       },
     },
     defaultVariants: {

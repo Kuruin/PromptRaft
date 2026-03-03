@@ -433,7 +433,7 @@ const PromptRefinement = () => {
               )}
               <div>
                 <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-3xl font-bold text-foreground">
+                  <h1 className="text-4xl font-heading font-extrabold tracking-tight text-foreground">
                     {selectedPromptId ? "Project Workspace" : "Prompt Refinement Studio"}
                   </h1>
                   {selectedPromptId && (
@@ -448,46 +448,46 @@ const PromptRefinement = () => {
                     </Button>
                   )}
                 </div>
-                <p className="text-muted-foreground">Transform your prompts into powerful instructions</p>
+                <p className="text-muted-foreground text-sm font-medium">Transform your prompts into powerful instructions</p>
               </div>
             </div>
 
             <div className="flex items-center space-x-6">
               <div className="text-center">
                 <div className="text-sm text-muted-foreground">Level</div>
-                <div className="text-lg font-bold text-ocean-primary">{level}</div>
+                <div className="text-lg font-bold text-foreground">{level}</div>
               </div>
               <div className="text-center">
                 <div className="text-sm text-muted-foreground">Streak</div>
-                <div className="text-lg font-bold text-gold-accent">{streak}🔥</div>
+                <div className="text-lg font-bold text-foreground">{streak}🔥</div>
               </div>
-              <div className="text-center min-w-32">
-                <div className="text-sm text-muted-foreground">XP Progress</div>
-                <div className="w-full bg-muted rounded-full h-2 mt-1">
+              <div className="text-center min-w-32 border border-neutral-200 dark:border-neutral-800 p-3 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50">
+                <div className="text-sm font-medium text-foreground mb-2 flex flex-col">
+                  <span>XP Progress</span>
+                  <span className="text-muted-foreground font-mono text-xs">{xp} / {nextLevelXP}</span>
+                </div>
+                <div className="w-full bg-neutral-200 dark:bg-neutral-800 rounded-md h-2 mt-1 overflow-hidden">
                   <div
-                    className="bg-black dark:bg-white/90 h-2 rounded-full transition-all duration-300"
+                    className="bg-black dark:bg-white h-2 rounded-md transition-all duration-700 ease-out"
                     style={{ width: `${xpProgress}%` }}
                   />
-                </div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  {xp}/{nextLevelXP}
                 </div>
               </div>
             </div>
           </div>
           <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-8">
-              <TabsTrigger value="refine" className="flex items-center gap-2">
+            <TabsList className="grid w-full grid-cols-2 mb-8 bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 p-1 rounded-lg">
+              <TabsTrigger value="refine" className="flex items-center gap-2 rounded-md data-[state=active]:bg-white data-[state=active]:dark:bg-black data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-neutral-200 dark:data-[state=active]:ring-neutral-800 transition-all duration-200">
                 <Wand2 className="w-4 h-4" />
                 Refine Prompts
               </TabsTrigger>
-              <TabsTrigger value="learn" className="flex items-center gap-2">
+              <TabsTrigger value="learn" className="flex items-center gap-2 rounded-md data-[state=active]:bg-white data-[state=active]:dark:bg-black data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-neutral-200 dark:data-[state=active]:ring-neutral-800 transition-all duration-200">
                 <BookOpen className="w-4 h-4" />
                 Learn & Practice
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="refine" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-in-out">
+            <TabsContent value="refine" className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
               {/* Version Controls */}
               {selectedPromptId && versions.length > 0 && (
                 <div className="flex items-center justify-between bg-muted/30 p-4 rounded-lg">
@@ -549,12 +549,12 @@ const PromptRefinement = () => {
                 } ${isOutputFullScreen ? "fixed inset-0 z-50 bg-background p-8 overflow-y-auto" : ""}`} >
                 {/* Input Section */}
                 {!isOutputFullScreen && (
-                  <CardEnhanced variant="ocean" className={`relative h-fit dark:bg-[#1f1f1f]/100 ${isInputFullScreen ? "max-w-5xl mx-auto w-full h-auto" : ""
+                  <CardEnhanced variant="default" className={`relative h-fit ${isInputFullScreen ? "max-w-5xl mx-auto w-full h-auto" : ""
                     }`}>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="absolute top-2 right-2 z-50"
+                      className="absolute top-2 right-2 z-50 text-muted-foreground hover:text-foreground hover:bg-neutral-100 dark:hover:bg-neutral-800"
                       onClick={() => setIsInputFullScreen(!isInputFullScreen)}
                     >
                       {isInputFullScreen ? (
@@ -563,14 +563,14 @@ const PromptRefinement = () => {
                         <Maximize2 className="w-4 h-4" />
                       )}
                     </Button>
-                    <CardEnhancedHeader>
+                    <CardEnhancedHeader className="border-b border-neutral-200 dark:border-neutral-800 pb-4">
                       <div className="flex items-center justify-between w-full">
                         <div>
-                          <CardEnhancedTitle className="flex items-center gap-2">
-                            <Target className="w-5 h-5" />
+                          <CardEnhancedTitle className="flex items-center gap-2 text-foreground font-bold font-sans">
+                            <Target className="w-4 h-4" />
                             Editor
                           </CardEnhancedTitle>
-                          <CardEnhancedDescription>
+                          <CardEnhancedDescription className="text-muted-foreground">
                             Edit your prompt or select a version
                           </CardEnhancedDescription>
                         </div>
@@ -598,28 +598,27 @@ const PromptRefinement = () => {
                         </div>
                       </div>
                     </CardEnhancedHeader>
-                    <CardEnhancedContent className="space-y-4">
+                    <CardEnhancedContent className="pt-6 space-y-4">
                       <Textarea
                         placeholder="Enter your prompt here... For example: 'Write me a blog post about AI'"
                         value={originalPrompt}
                         onChange={(e) => setOriginalPrompt(e.target.value)}
-                        className="min-h-32 resize-none"
+                        className="min-h-[200px] resize-none font-mono text-sm bg-background border border-neutral-200 dark:border-neutral-800 focus:border-neutral-400 dark:focus:border-neutral-500 shadow-none text-foreground placeholder:text-muted-foreground"
                       />
-                      <div className="flex gap-2">
+                      <div className="flex gap-3 mt-4">
                         <Button
                           variant="outline"
                           onClick={handleSaveVersion}
                           disabled={isSaving || !originalPrompt.trim() || !isAuthenticated}
-                          className="flex-1"
+                          className="flex-1 bg-transparent hover:bg-neutral-50 dark:hover:bg-neutral-900 border-neutral-200 dark:border-neutral-800"
                         >
                           <Save className="w-4 h-4 mr-2" />
                           {isSaving ? "Saving..." : "Save Version"}
                         </Button>
                         <Button
-                          variant="custom1"
                           onClick={handleRefinePrompt}
                           disabled={isRefining || !originalPrompt.trim()}
-                          className="flex-1"
+                          className="flex-1 bg-black text-white hover:bg-neutral-800 dark:bg-white dark:text-black dark:hover:bg-neutral-200 shadow-none"
                         >
                           {isRefining ? (
                             <>
@@ -667,30 +666,30 @@ const PromptRefinement = () => {
 
                 {/* Output Section */}
                 {!isInputFullScreen && (
-                  <CardEnhanced variant="gold" className={`relative h-50 ${isOutputFullScreen ? "fixed top-10 right-10 bottom-10 z-50 md:w-1/2 h-auto" : ""}`}>
-                    <Button variant="ghost" size="icon" className="absolute top-2 right-2 z-50" onClick={() => setIsOutputFullScreen(!isOutputFullScreen)}>
+                  <CardEnhanced variant="accent" className={`relative h-50 ${isOutputFullScreen ? "fixed top-10 right-10 bottom-10 z-50 md:w-1/2 h-auto" : ""}`}>
+                    <Button variant="ghost" size="icon" className="absolute top-2 right-2 z-50 text-muted-foreground hover:text-foreground" onClick={() => setIsOutputFullScreen(!isOutputFullScreen)}>
                       {isOutputFullScreen ? <Minimize2 className="w-4 h-4"></Minimize2> : <Maximize2 className="w-4 h-4"></Maximize2>}
                     </Button>
-                    <CardEnhancedHeader>
-                      <CardEnhancedTitle className="flex items-center gap-2">
-                        <Sparkles className="w-5 h-5" />
+                    <CardEnhancedHeader className="border-b border-neutral-200 dark:border-neutral-800 pb-4">
+                      <CardEnhancedTitle className="flex items-center gap-2 text-foreground font-bold font-sans">
+                        <Sparkles className="w-4 h-4" />
                         Optimized Version
                       </CardEnhancedTitle>
-                      <CardEnhancedDescription>
+                      <CardEnhancedDescription className="text-muted-foreground">
                         AI suggestions will appear here
                       </CardEnhancedDescription>
                     </CardEnhancedHeader>
-                    <CardEnhancedContent className="space-y-4">
-                      <div className="min-h-32 p-4 bg-muted/50 rounded-lg border-2 border-dashed border-muted-foreground/20">
+                    <CardEnhancedContent className="pt-6 space-y-4">
+                      <div className="min-h-[200px] p-5 bg-background rounded-lg border border-neutral-200 dark:border-neutral-800">
                         {refinedPrompt ? (
                           <div className="space-y-3">
-                            <p className="text-sm leading-relaxed">{refinedPrompt}</p>
-                            <div className="flex gap-2 pt-2 border-t">
+                            <p className="text-sm leading-relaxed font-mono text-foreground whitespace-pre-wrap">{refinedPrompt}</p>
+                            <div className="flex gap-2 pt-4 mt-2 border-t border-neutral-100 dark:border-neutral-800">
                               <Button
-                                variant="custom1"
+                                variant="outline"
                                 size="sm"
                                 onClick={() => copyToClipboard(refinedPrompt)}
-                                className="flex-1"
+                                className="flex-1 bg-transparent hover:bg-neutral-100 dark:hover:bg-neutral-800 border-neutral-200 dark:border-neutral-800"
                               >
                                 <Copy className="w-4 h-4 mr-2" />
                                 Copy
@@ -734,9 +733,9 @@ const PromptRefinement = () => {
               </div>
 
               {/* Quick Tips */}
-              <CardEnhanced variant="glass">
-                <CardEnhancedHeader>
-                  <CardEnhancedTitle>💡 Pro Tips for Better Prompts</CardEnhancedTitle>
+              <CardEnhanced variant="flat">
+                <CardEnhancedHeader className="border-b border-neutral-200 dark:border-neutral-700/50 pb-4">
+                  <CardEnhancedTitle className="text-lg font-bold">💡 Pro Tips for Better Prompts</CardEnhancedTitle>
                 </CardEnhancedHeader>
                 <CardEnhancedContent>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -775,13 +774,13 @@ const PromptRefinement = () => {
               >
                 {/* Level Card */}
                 <div key="level" className="h-full">
-                  <CardEnhanced variant="ocean" className="text-center h-full flex flex-col relative group">
-                    <div className="drag-handle absolute top-2 right-2 cursor-move opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10 rounded">
+                  <CardEnhanced variant="outline" className="text-center h-full flex flex-col relative group">
+                    <div className="drag-handle absolute top-2 right-2 cursor-move opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded">
                       <GripVertical className="w-4 h-4 text-muted-foreground" />
                     </div>
                     <CardEnhancedContent className="p-3 flex flex-col items-center justify-center h-full">
-                      <Trophy className="w-10 h-10 text-gold-accent mb-3" />
-                      <h3 className="text-2xl font-bold text-ocean-primary">Level {level}</h3>
+                      <Trophy className="w-8 h-8 text-foreground mb-3" />
+                      <h3 className="text-2xl font-bold font-sans">Level {level}</h3>
                       <p className="text-sm font-medium text-muted-foreground mt-1">{getRankTitle(level)}</p>
                     </CardEnhancedContent>
                   </CardEnhanced>
@@ -789,13 +788,13 @@ const PromptRefinement = () => {
 
                 {/* XP Card */}
                 <div key="xp" className="h-full">
-                  <CardEnhanced variant="gold" className="text-center h-full flex flex-col relative group">
-                    <div className="drag-handle absolute top-2 right-2 cursor-move opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10 rounded">
+                  <CardEnhanced variant="accent" className="text-center h-full flex flex-col relative group">
+                    <div className="drag-handle absolute top-2 right-2 cursor-move opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded">
                       <GripVertical className="w-4 h-4 text-muted-foreground" />
                     </div>
                     <CardEnhancedContent className="p-3 flex flex-col items-center justify-center h-full">
-                      <Sparkles className="w-10 h-10 text-ocean-primary mb-3" />
-                      <h3 className="text-2xl font-bold text-ocean-primary">{xp}</h3>
+                      <Sparkles className="w-8 h-8 text-foreground mb-3" />
+                      <h3 className="text-2xl font-bold font-sans">{xp}</h3>
                       <p className="text-sm font-medium text-muted-foreground mt-1">Total XP Earned</p>
                     </CardEnhancedContent>
                   </CardEnhanced>
@@ -803,64 +802,59 @@ const PromptRefinement = () => {
 
                 {/* Streak Card */}
                 <div key="streak" className="h-full">
-                  <CardEnhanced variant="glass" className="text-center h-full flex flex-col relative group">
-                    <div className="drag-handle absolute top-2 right-2 cursor-move opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10 rounded">
+                  <CardEnhanced variant="outline" className="text-center h-full flex flex-col relative group">
+                    <div className="drag-handle absolute top-2 right-2 cursor-move opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded">
                       <GripVertical className="w-4 h-4 text-muted-foreground" />
                     </div>
                     <CardEnhancedContent className="p-3 flex flex-col items-center justify-center h-full">
-                      <Target className="w-10 h-10 text-gold-accent mb-3" />
-                      <h3 className="text-2xl font-bold text-ocean-primary">{streak}</h3>
-                      <p className="text-sm font-medium text-muted-foreground mt-1">Day Streak</p>
+                      <div className="text-3xl font-bold mb-2">🔥</div>
+                      <h3 className="text-2xl font-bold font-sans">{streak} Days</h3>
+                      <p className="text-sm font-medium text-muted-foreground mt-1">Current Streak</p>
                     </CardEnhancedContent>
                   </CardEnhanced>
                 </div>
 
                 {/* Daily Challenge */}
                 <div key="challenge" className="h-full">
-                  <CardEnhanced variant="ocean" className="h-full flex flex-col relative group">
-                    <div className="drag-handle absolute top-2 right-2 cursor-move opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10 rounded z-10">
+                  <CardEnhanced variant="outline" className="h-full flex flex-col relative group">
+                    <div className="drag-handle absolute top-2 right-2 cursor-move opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded">
                       <GripVertical className="w-4 h-4 text-muted-foreground" />
                     </div>
-                    <CardEnhancedHeader className="p-4 pb-2">
-                      <CardEnhancedTitle className="text-xl">🎯 Daily Challenge</CardEnhancedTitle>
-                      <CardEnhancedDescription className="text-sm mt-1">
-                        Today's task
-                      </CardEnhancedDescription>
+                    <CardEnhancedHeader className="border-b border-neutral-200 dark:border-neutral-800 pb-4">
+                      <CardEnhancedTitle className="text-lg flex items-center gap-2 font-bold">
+                        <Target className="w-5 h-5 text-foreground" />
+                        Daily Challenge
+                      </CardEnhancedTitle>
+                      <CardEnhancedDescription className="text-muted-foreground mt-1">Refine 3 prompts today to earn bonus XP</CardEnhancedDescription>
                     </CardEnhancedHeader>
-                    <CardEnhancedContent className="p-4 pt-1 flex flex-col flex-1 h-full min-h-0 pb-4 overflow-hidden">
-                      <div className="space-y-3 flex-1 min-h-0 overflow-y-auto pr-1">
-                        <p className="text-sm">
-                          <strong>Transform current prompt:</strong>
-                        </p>
-                        <div className="p-3 bg-muted rounded-md text-sm italic">
-                          "Make me something creative"
-                        </div>
-                        <div className="p-3 bg-muted rounded-md text-sm italic">
-                          "Make me something creative"
-                        </div>
+                    <CardEnhancedContent className="pt-6 flex flex-col justify-center gap-4 flex-1">
+                      <div className="flex items-center justify-between text-sm font-medium">
+                        <span className="text-muted-foreground">Progress</span>
+                        <span className="font-bold text-foreground">1/3</span>
                       </div>
-                      <Button variant="challenge" className="w-full mt-4 shrink-0 font-medium" onClick={() => toast.error("YOU ARE NOT YET READY SOLDIER!")}>
-                        Start (+50 XP)
-                      </Button>
+                      <div className="w-full bg-neutral-200 dark:bg-neutral-800 rounded-full h-2">
+                        <div className="bg-black dark:bg-white h-2 rounded-full transition-all" style={{ width: '33%' }}></div>
+                      </div>
+                      <Button className="w-full mt-2 bg-black text-white hover:bg-neutral-800 dark:bg-white dark:text-black dark:hover:bg-neutral-200 shadow-none">Continue Refining</Button>
                     </CardEnhancedContent>
                   </CardEnhanced>
                 </div>
 
                 {/* Learning Modules */}
                 <div key="modules" className="h-full">
-                  <CardEnhanced variant="glass" className="h-full flex flex-col relative group">
-                    <div className="drag-handle absolute top-2 right-2 cursor-move opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10 rounded z-10">
+                  <CardEnhanced variant="flat" className="h-full flex flex-col relative group">
+                    <div className="drag-handle absolute top-2 right-2 cursor-move opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded">
                       <GripVertical className="w-4 h-4 text-muted-foreground" />
                     </div>
-                    <CardEnhancedHeader className="p-4 pb-2">
-                      <CardEnhancedTitle className="text-xl">📚 Modules</CardEnhancedTitle>
+                    <CardEnhancedHeader className="pb-4">
+                      <CardEnhancedTitle className="text-lg font-bold">Modules</CardEnhancedTitle>
                       <CardEnhancedDescription className="text-sm mt-1">
                         Mastery Path
                       </CardEnhancedDescription>
                     </CardEnhancedHeader>
-                    <CardEnhancedContent className="p-4 pt-1 flex-1 min-h-0 overflow-y-auto pr-1 pb-2">
+                    <CardEnhancedContent className="flex-1 overflow-y-auto space-y-3 pb-2 custom-scrollbar">
                       <div className="space-y-3">
-                        <div className="flex items-center justify-between p-3 bg-ocean-mist/20 rounded-md">
+                        <div className="flex items-center justify-between p-3 bg-neutral-100 dark:bg-neutral-800 rounded-md">
                           <span className="text-sm font-medium">Basics</span>
                           <Badge className="text-xs px-2 py-0.5">Done</Badge>
                         </div>
