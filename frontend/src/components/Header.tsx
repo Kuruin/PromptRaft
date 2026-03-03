@@ -9,7 +9,7 @@ export default function Header() {
   const { isAuthenticated, logout } = useAuth();
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/60 dark:bg-[#121212]">
-      <div className="container flex h-16 items-center justify-between">
+      <div className="flex h-16 items-center justify-between w-full px-6">
         <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <Sparkles className="h-6 w-6 text-primary" />
           <span className="text-xl font-bold font-mono">

@@ -408,7 +408,7 @@ const PromptRefinement = () => {
   };
 
   return (
-    <div className="min-h-screen dark:bg-[#1a1a1a] flex flex-col">
+    <div className="min-h-screen dark:bg-[#1a1a1a] flex flex-col overflow-y-hidden">
       <Header />
       <div className="flex flex-1">
         {isAuthenticated && (
@@ -438,10 +438,10 @@ const PromptRefinement = () => {
                   </h1>
                   {selectedPromptId && (
                     <Button
-                      variant="destructive"
+                      variant="custom2"
                       size="sm"
                       onClick={handleDeleteProject}
-                      className="h-8 w-8 p-0 rounded-full"
+                      className="h-8 w-8 p-0 rounded-md"
                       title="Delete Project"
                     >
                       <Trash2 className="w-4 h-4" />
