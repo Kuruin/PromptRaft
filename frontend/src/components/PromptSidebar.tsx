@@ -81,7 +81,7 @@ export function PromptSidebar({ prompts, selectedId, onSelect, onNew, onRename, 
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="h-8 w-8 shrink-0 text-green-500 hover:text-green-600 hover:bg-green-500/10"
+                                            className="h-8 w-8 shrink-0 text-green-600 dark:text-green-500 hover:text-green-700 dark:hover:text-green-400 hover:bg-green-100 dark:hover:bg-green-500/20"
                                             onClick={handleSaveEdit}
                                         >
                                             <Check className="w-4 h-4" />
@@ -89,7 +89,7 @@ export function PromptSidebar({ prompts, selectedId, onSelect, onNew, onRename, 
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="h-8 w-8 shrink-0 text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                                            className="h-8 w-8 shrink-0 text-red-600 dark:text-red-500 hover:text-red-700 dark:hover:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/20"
                                             onClick={handleCancelEdit}
                                         >
                                             <X className="w-4 h-4" />
@@ -97,7 +97,7 @@ export function PromptSidebar({ prompts, selectedId, onSelect, onNew, onRename, 
                                     </div>
                                 ) : (
                                     <Button
-                                        variant={selectedId === prompt._id ? "secondary" : "ghost"}
+                                        variant={selectedId === prompt._id ? "secondary" : "custom2"}
                                         className={cn(
                                             "w-full justify-start text-left font-normal truncate group-hover:pr-8 transition-all",
                                             selectedId === prompt._id && "bg-muted"
@@ -113,7 +113,7 @@ export function PromptSidebar({ prompts, selectedId, onSelect, onNew, onRename, 
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        className="absolute right-1 w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        className="absolute right-1 w-6 h-6 opacity-0 group-hover:opacity-100 transition-all bg-background/50 backdrop-blur-sm hover:bg-muted dark:hover:bg-muted/80"
                                         onClick={(e) => handleStartEdit(e, prompt)}
                                         title="Rename Project"
                                     >
