@@ -23,6 +23,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useUndoRedo } from "@/hooks/useUndoRedo";
+import { useLongPress } from "@/hooks/useLongPress";
+import { Undo2, Redo2 } from "lucide-react";
 
 interface PromptVersion {
   _id: string;
@@ -51,7 +54,24 @@ const PromptRefinement = () => {
   const [showSidebar, setShowSidebar] = useState(true);
 
   // Editor State
-  const [originalPrompt, setOriginalPrompt] = useState("");
+  const {
+    state: originalPrompt,
+    set: setOriginalPrompt,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    reset: resetUndoHistory
+  } = useUndoRedo("");
+
+  const undoLongPress = useLongPress(() => {
+    if (canUndo) undo();
+  }, { threshold: 300, intervalMs: 50 });
+
+  const redoLongPress = useLongPress(() => {
+    if (canRedo) redo();
+  }, { threshold: 300, intervalMs: 50 });
+
   const [refinedPrompt, setRefinedPrompt] = useState("");
 
   // Metadata State
@@ -105,7 +125,7 @@ const PromptRefinement = () => {
     setSelectedPromptId(null);
     setVersions([]);
     setActiveVersion(null);
-    setOriginalPrompt("");
+    resetUndoHistory("");
     setRefinedPrompt("");
     setUserFeedback("");
     setRefinedFeedback("");
@@ -133,7 +153,7 @@ const PromptRefinement = () => {
         // Load the latest version
         const latest = projectVersions[0]; // Sorted by desc in backend
         setActiveVersion(latest);
-        setOriginalPrompt(latest.content);
+        resetUndoHistory(latest.content);
         setRefinedPrompt(latest.refinedContent || ""); // Load refined content or empty
         setUserFeedback(latest.aiFeedback || "");
         // Note: aiFeedback in DB is currently generic or specific, might need parsing or UI adjust
@@ -544,13 +564,39 @@ const PromptRefinement = () => {
                       )}
                     </Button>
                     <CardEnhancedHeader>
-                      <CardEnhancedTitle className="flex items-center gap-2">
-                        <Target className="w-5 h-5" />
-                        Editor
-                      </CardEnhancedTitle>
-                      <CardEnhancedDescription>
-                        Edit your prompt or select a version
-                      </CardEnhancedDescription>
+                      <div className="flex items-center justify-between w-full">
+                        <div>
+                          <CardEnhancedTitle className="flex items-center gap-2">
+                            <Target className="w-5 h-5" />
+                            Editor
+                          </CardEnhancedTitle>
+                          <CardEnhancedDescription>
+                            Edit your prompt or select a version
+                          </CardEnhancedDescription>
+                        </div>
+                        <div className="flex gap-2 mr-6">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            {...undoLongPress}
+                            disabled={!canUndo}
+                            className="h-8 w-8"
+                            title="Undo"
+                          >
+                            <Undo2 className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            {...redoLongPress}
+                            disabled={!canRedo}
+                            className="h-8 w-8"
+                            title="Redo"
+                          >
+                            <Redo2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
                     </CardEnhancedHeader>
                     <CardEnhancedContent className="space-y-4">
                       <Textarea
