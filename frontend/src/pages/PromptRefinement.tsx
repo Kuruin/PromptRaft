@@ -60,11 +60,17 @@ const PromptRefinement = () => {
   const [userPercentage, setUserPercentage] = useState(0);
   const [backendPercentage, setBackendPercentage] = useState(0);
 
+  const selectedPromptIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    selectedPromptIdRef.current = selectedPromptId;
+  }, [selectedPromptId]);
+
   const [isRefining, setIsRefining] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   const [isInputFullScreen, setIsInputFullScreen] = useState(false);
   const [isOutputFullScreen, setIsOutputFullScreen] = useState(false);
+  const [activeTab, setActiveTab] = useState("refine");
 
   const level = user?.level || 1;
   const xp = user?.xp || 0;
@@ -87,6 +93,14 @@ const PromptRefinement = () => {
     }
   };
 
+  const handleNewProjectWrapper = async () => {
+    // Auto-save logic if user is leaving an unsaved "New Chat" with content
+    if (!selectedPromptId && originalPrompt.trim() !== "") {
+      await handleSaveVersion();
+    }
+    handleNewProject();
+  };
+
   const handleNewProject = () => {
     setSelectedPromptId(null);
     setVersions([]);
@@ -97,6 +111,15 @@ const PromptRefinement = () => {
     setRefinedFeedback("");
     setUserPercentage(0);
     setBackendPercentage(0);
+  };
+
+  const handleSelectProjectWrapper = async (id: string) => {
+    // Only auto-save if we are moving from a New Chat (no selectedPromptId) 
+    // to an existing project AND we have typed something.
+    if (!selectedPromptId && originalPrompt.trim() !== "") {
+      await handleSaveVersion();
+    }
+    await handleSelectProject(id);
   };
 
   const handleSelectProject = async (id: string) => {
@@ -203,58 +226,73 @@ const PromptRefinement = () => {
 
     setIsRefining(true);
 
+    let currentId = selectedPromptId;
+
     try {
+      // 0. Auto-Create Project if it's a "New Chat"
+      if (!currentId) {
+        const title = originalPrompt.slice(0, 30) + (originalPrompt.length > 30 ? "..." : "");
+        const res = await axios.post("http://localhost:3000/api/v1/prompts", {
+          title,
+          initialContent: originalPrompt,
+          initialRefinedContent: ""
+        });
+        currentId = res.data.promptId;
+
+        // Optimistically update UI so it feels instant
+        setSelectedPromptId(currentId as string);
+        toast.success("Project created!");
+
+        // Run fetch in background to populate sidebar
+        fetchPrompts();
+      }
+
       // 1. Get Optimized Content
       const dbCall = await axios.post("http://localhost:3000/api/v1/user/optimize", {
         prompt: originalPrompt
       });
 
       const enhancedContent = dbCall.data.response;
-      setRefinedPrompt(enhancedContent);
 
       // 2. Get Scores
       const userDbCall = await axios.post("http://localhost:3000/api/v1/user/secret-optimize", {
         prompt: originalPrompt
       });
-      setUserFeedback(userDbCall.data.feedback.split("Reason: ")[1]);
-      setUserPercentage(Number(userDbCall.data.score.split(" ")[1]));
+      const uFeedback = userDbCall.data.feedback.split("Reason: ")[1];
+      const uPercentage = Number(userDbCall.data.score.split(" ")[1]);
 
       const outputDbCall = await axios.post("http://localhost:3000/api/v1/user/secret-optimize", {
         prompt: enhancedContent
       });
-      setRefinedFeedback(outputDbCall.data.feedback.split("Reason: ")[1]);
-      setBackendPercentage(Number(outputDbCall.data.score.split(" ")[1]));
+      const rFeedback = outputDbCall.data.feedback.split("Reason: ")[1];
+      const bPercentage = Number(outputDbCall.data.score.split(" ")[1]);
 
-      refreshProfile();
-
-      toast.success("Prompt refined successfully!");
-
-      // 3. Auto-Save Result if in a project
-      if (selectedPromptId) {
-        // When we auto-save a refinement, the "New Version" is the Enhanced Prompt.
-        // So content = enhancedContent.
-        // RefinedContent could be empty since we haven't refined *that* yet?
-        // OR do we want V2: Input=A, Output=B? 
-        // If I click Refine, I expect to SEE the result.
-        // If the app auto-saves to V2, and V2 has content=B.
-        // Then I see B in left box?
-        // No, UI currently shows B in right box.
-        // IF I WANT TO SAVE THE PAIR: 
-        // I should probably save V(N+1) = { content: originalPrompt, refinedContent: enhancedContent }.
-        // This preserves the "Transformation".
-        await axios.post(`http://localhost:3000/api/v1/prompts/${selectedPromptId}/version`, {
+      // 3. Auto-Save Result safely in the background using the captured currentId
+      if (currentId) {
+        await axios.post(`http://localhost:3000/api/v1/prompts/${currentId}/version`, {
           content: originalPrompt,
           refinedContent: enhancedContent,
           aiFeedback: outputDbCall.data.feedback,
-          aiScore: Number(outputDbCall.data.score.split(" ")[1])
+          aiScore: bPercentage
         });
-        // Refresh list to show new version
-        const res = await axios.get(`http://localhost:3000/api/v1/prompts/${selectedPromptId}`);
-        setVersions(res.data.versions);
-        // We DON'T set activeVersion to the new one immediately if we want to keep the view as is?
-        // Actually if we just fetched versions, the user is still looking at the state.
-        // If they change version in dropdown, they see it.
       }
+
+      // 4. Update UI ONLY if the user hasn't switched away from this project
+      if (selectedPromptIdRef.current === currentId) {
+        setRefinedPrompt(enhancedContent);
+        setUserFeedback(uFeedback);
+        setUserPercentage(uPercentage);
+        setRefinedFeedback(rFeedback);
+        setBackendPercentage(bPercentage);
+
+        if (currentId) {
+          const res = await axios.get(`http://localhost:3000/api/v1/prompts/${currentId}`);
+          setVersions(res.data.versions);
+        }
+      }
+
+      refreshProfile();
+      toast.success("Prompt refined successfully!");
 
     } catch (e) {
       toast.error("Looks like Gemini is down!");
@@ -262,6 +300,14 @@ const PromptRefinement = () => {
     } finally {
       setIsRefining(false);
     }
+  };
+
+  const handleTabChange = async (value: string) => {
+    // Auto-save logic if user is leaving an unsaved "New Chat" with content to switch tabs
+    if (!selectedPromptId && originalPrompt.trim() !== "" && value !== "refine") {
+      await handleSaveVersion();
+    }
+    setActiveTab(value);
   };
 
   const copyToClipboard = (text: string) => {
@@ -336,8 +382,8 @@ const PromptRefinement = () => {
           <PromptSidebar
             prompts={prompts}
             selectedId={selectedPromptId}
-            onSelect={handleSelectProject}
-            onNew={handleNewProject}
+            onSelect={handleSelectProjectWrapper}
+            onNew={handleNewProjectWrapper}
             isOpen={showSidebar}
           />
         )}
@@ -395,7 +441,7 @@ const PromptRefinement = () => {
               </div>
             </div>
           </div>
-          <Tabs defaultValue="refine" className="w-full">
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-8">
               <TabsTrigger value="refine" className="flex items-center gap-2">
                 <Wand2 className="w-4 h-4" />
