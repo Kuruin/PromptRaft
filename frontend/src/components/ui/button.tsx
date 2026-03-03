@@ -15,6 +15,7 @@ const buttonVariants = cva(
         custom1: "border border-input bg-background hover:bg-[#121212] dark:hover:bg-[#a15953] hover:text-accent-foreground",
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
+        custom2: "dark:hover:border-white/60 dark:hover:border-2",
         link: "text-primary underline-offset-4 hover:underline",
         // Custom nautical variants
         ocean: "border dark:bg-[#121212] bg-gradient-ocean text-primary-foreground hover:shadow-ocean transition-all duration-300 transform hover:scale-105 dark:border-white dark:text-white",

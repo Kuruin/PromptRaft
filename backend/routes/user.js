@@ -10,9 +10,43 @@ const { connectDb, User } = require("../db");
 const jwt = require("jsonwebtoken");
 connectDb();
 
-router.post("/optimize", async (req, res) => {
-    const parsedBody = req.body;
-    const { prompt } = parsedBody;
+const { authMiddleware } = require("../middleware");
+const { updateStreak, addXp } = require("../gamification");
+
+router.get("/me", authMiddleware, async (req, res) => {
+    try {
+        const user = await User.findById(req.userId).select("-password");
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        // Check if new day
+        const changed = await updateStreak(user);
+        if (changed) {
+            await user.save();
+        }
+
+        res.json({ user });
+    } catch (e) {
+        res.status(500).json({ error: "Failed to fetch user" });
+    }
+});
+
+// Protected Route: Optimize Prompt
+router.post("/optimize", authMiddleware, async (req, res) => {
+    const { prompt } = req.body;
+
+    // Award XP for using AI
+    try {
+        const user = await User.findById(req.userId);
+        if (user) {
+            await addXp(user, 20); // 20 XP for refining
+            await user.save();
+        }
+    } catch (e) {
+        console.error("XP Error", e);
+    }
+
     const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
         contents: prompt,
@@ -24,20 +58,30 @@ router.post("/optimize", async (req, res) => {
 })
 
 router.post("/secret-optimize", async (req, res) => {
-    const parsedBody = req.body;
-    const { prompt } = parsedBody;
-    const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: prompt,
-        config: {
-            systemInstruction: process.env.SECRET_PROMPT,
-        }
-    });
-    res.json({
-        score: response.text.split("\n")[0] || '0/100',
-        feedback: response.text.split("\n")[1] || "We are working on it ",
-        text: response.text
-    });
+    try {
+        const parsedBody = req.body;
+        const { prompt } = parsedBody;
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: prompt,
+            config: {
+                systemInstruction: process.env.SECRET_PROMPT,
+            }
+        });
+        res.json({
+            score: response.text.split("\n")[0] || '0/100',
+            feedback: response.text.split("\n")[1] || "We are working on it ",
+            text: response.text
+        });
+    } catch (e) {
+        console.error("AI Error:", e);
+        // Return mock data or error to prevent frontend break
+        res.status(503).json({
+            score: '0/100',
+            feedback: "AI Busy (Rate Limit or Error)",
+            text: ""
+        });
+    }
 })
 
 router.post("/signup", async (req, res) => {
@@ -65,31 +109,57 @@ router.post("/signup", async (req, res) => {
     }
 })
 
+/*
+    Wait, the previous logic was authenticating via TOKEN in HEADERS? 
+    That's incorrect for a login route. It should take username/password from BODY.
+    Fixed standard login flow.
+*/
 router.post("/signin", async (req, res) => {
-    const parsedBody = req.body;
-    const { authorization } = req.headers;
-    const token = authorization.split(" ")[1]
-    const valid = signinSchema.safeParse(parsedBody);
+    const { username, password } = req.body;
 
-    if (!valid.success || token == null) {
-        return res.status(404).json({ error: "Enter valid credentials / token" })
+    // Validate input
+    const valid = signinSchema.safeParse({ username, password });
+    if (!valid.success) {
+        return res.status(411).json({ error: "Invalid inputs" });
     }
 
     try {
-        const dbCall = await User.findOne({ username: parsedBody.username });
-        if (dbCall) {
-            jwt.verify(token, process.env.SECRET_TOKEN);
-            res.json({ msg: "Signin successfull" });
-            return;
+        // Find user
+        const user = await User.findOne({ username });
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
         }
-        res.status(404).json({ error: "User not found" })
 
-    }
-    catch (e) {
-        console.log(e);
-        res.status(400).json({ error: "Enter valid token" });
-    }
+        // Check password (Text-based as per Schema, though bcrypt is recommended later)
+        if (user.password !== password) {
+            return res.status(401).json({ error: "Incorrect password" });
+        }
 
-})
+        // Update Streak 
+        await updateStreak(user);
+        await user.save();
+
+        // Generate Token
+        const token = jwt.sign({ id: user._id }, process.env.SECRET_TOKEN);
+
+        res.json({
+            msg: "Signin successful",
+            token,
+            user: {
+                _id: user._id,
+                username: user.username,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                xp: user.xp,
+                level: user.level,
+                streak: user.streak
+            }
+        });
+
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: "Server error during login" });
+    }
+});
 
 module.exports = router;
