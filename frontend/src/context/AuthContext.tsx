@@ -10,6 +10,7 @@ interface User {
     xp: number;
     level: number;
     streak: number;
+    isAdmin?: boolean;
 }
 
 interface AuthContextType {

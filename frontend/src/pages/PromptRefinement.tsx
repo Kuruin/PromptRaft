@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useUndoRedo } from "@/hooks/useUndoRedo";
 import { useLongPress } from "@/hooks/useLongPress";
 import { Undo2, Redo2 } from "lucide-react";
@@ -41,6 +42,14 @@ interface PromptProject {
   _id: string;
   title: string;
   updatedAt: string;
+}
+
+interface DailyChallenge {
+  title: string;
+  description: string;
+  targetCount: number;
+  rewardXp: number;
+  isActive: boolean;
 }
 
 const PromptRefinement = () => {
@@ -92,6 +101,27 @@ const PromptRefinement = () => {
   const [isOutputFullScreen, setIsOutputFullScreen] = useState(false);
   const [activeTab, setActiveTab] = useState("refine");
 
+  const [dailyChallenges, setDailyChallenges] = useState<DailyChallenge[]>([]);
+
+  // Attempt Challenge Modal State
+  const [isAttemptModalOpen, setIsAttemptModalOpen] = useState(false);
+  const [attemptingChallenge, setAttemptingChallenge] = useState<DailyChallenge | null>(null);
+  const [challengeAttemptInput, setChallengeAttemptInput] = useState("");
+  const [challengeEvaluation, setChallengeEvaluation] = useState<any>(null);
+  const [isSubmittingAttempt, setIsSubmittingAttempt] = useState(false);
+  const [challengeProgress, setChallengeProgress] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    const savedProgress = localStorage.getItem('challenge_progress');
+    if (savedProgress) {
+      try {
+        setChallengeProgress(JSON.parse(savedProgress));
+      } catch (e) {
+        // Ignored
+      }
+    }
+  }, []);
+
   const level = user?.level || 1;
   const xp = user?.xp || 0;
   const streak = user?.streak || 0;
@@ -102,7 +132,17 @@ const PromptRefinement = () => {
     if (isAuthenticated) {
       fetchPrompts();
     }
+    fetchDailyChallenge();
   }, [isAuthenticated]);
+
+  const fetchDailyChallenge = async () => {
+    try {
+      const res = await axios.get("http://localhost:3000/api/v1/challenges/daily");
+      setDailyChallenges(res.data.challenges || []);
+    } catch (e) {
+      console.error("Failed to fetch daily challenge", e);
+    }
+  };
 
   const fetchPrompts = async () => {
     try {
@@ -131,6 +171,7 @@ const PromptRefinement = () => {
     setRefinedFeedback("");
     setUserPercentage(0);
     setBackendPercentage(0);
+    setActiveTab("refine");
   };
 
   const handleSelectProjectWrapper = async (id: string) => {
@@ -341,6 +382,75 @@ const PromptRefinement = () => {
       await handleSaveVersion();
     }
     setActiveTab(value);
+  };
+
+  const handleAttemptChallenge = (challenge: DailyChallenge) => {
+    setAttemptingChallenge(challenge);
+    const cached = sessionStorage.getItem(`challenge_eval_${challenge.title}`);
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        setChallengeAttemptInput(parsed.input || "");
+        setChallengeEvaluation(parsed.evaluation || null);
+      } catch (e) {
+        setChallengeAttemptInput("");
+        setChallengeEvaluation(null);
+      }
+    } else {
+      setChallengeAttemptInput("");
+      setChallengeEvaluation(null);
+    }
+    setIsAttemptModalOpen(true);
+  };
+
+  const handleSubmitChallengeAttempt = async () => {
+    if (!challengeAttemptInput.trim() || !attemptingChallenge) return;
+
+    // Prevent duplicate backend call if input is identical to what's already evaluated
+    const cached = sessionStorage.getItem(`challenge_eval_${attemptingChallenge.title}`);
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        if (parsed.input === challengeAttemptInput) {
+          toast.info("No changes found, please try again with a different prompt.");
+          return;
+        }
+      } catch (e) {
+        // Ignore parse error and proceed with evaluation
+      }
+    }
+
+    setIsSubmittingAttempt(true);
+    try {
+      const res = await axios.post("http://localhost:3000/api/v1/user/challenge-evaluate", {
+        challengeTitle: attemptingChallenge.title,
+        challengeDescription: attemptingChallenge.description,
+        userPrompt: challengeAttemptInput,
+        rewardXp: attemptingChallenge.rewardXp
+      }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+
+      setChallengeEvaluation(res.data);
+      sessionStorage.setItem(`challenge_eval_${attemptingChallenge.title}`, JSON.stringify({
+        input: challengeAttemptInput,
+        evaluation: res.data
+      }));
+
+      const currentProg = challengeProgress[attemptingChallenge.title] || 0;
+      const newProgress = currentProg + 1;
+      const updatedProgress = { ...challengeProgress, [attemptingChallenge.title]: newProgress };
+      setChallengeProgress(updatedProgress);
+      localStorage.setItem('challenge_progress', JSON.stringify(updatedProgress));
+
+      refreshProfile(); // Get XP/Streak updates if backend implements them
+      toast.success("Challenge evaluated!");
+    } catch (e) {
+      toast.error("Evaluation failed.");
+      console.error(e);
+    } finally {
+      setIsSubmittingAttempt(false);
+    }
   };
 
   const copyToClipboard = (text: string) => {
@@ -788,7 +898,7 @@ const PromptRefinement = () => {
 
                 {/* XP Card */}
                 <div key="xp" className="h-full">
-                  <CardEnhanced variant="accent" className="text-center h-full flex flex-col relative group">
+                  <CardEnhanced variant="outline" className="text-center h-full flex flex-col relative group">
                     <div className="drag-handle absolute top-2 right-2 cursor-move opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded">
                       <GripVertical className="w-4 h-4 text-muted-foreground" />
                     </div>
@@ -816,33 +926,79 @@ const PromptRefinement = () => {
 
                 {/* Daily Challenge */}
                 <div key="challenge" className="h-full">
-                  <CardEnhanced variant="outline" className="h-full flex flex-col relative group">
+                  <CardEnhanced variant="accent" className="h-full flex flex-col relative group">
                     <div className="drag-handle absolute top-2 right-2 cursor-move opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded">
                       <GripVertical className="w-4 h-4 text-muted-foreground" />
                     </div>
-                    <CardEnhancedHeader className="border-b border-neutral-200 dark:border-neutral-800 pb-4">
-                      <CardEnhancedTitle className="text-lg flex items-center gap-2 font-bold">
-                        <Target className="w-5 h-5 text-foreground" />
-                        Daily Challenge
-                      </CardEnhancedTitle>
-                      <CardEnhancedDescription className="text-muted-foreground mt-1">Refine 3 prompts today to earn bonus XP</CardEnhancedDescription>
-                    </CardEnhancedHeader>
-                    <CardEnhancedContent className="pt-6 flex flex-col justify-center gap-4 flex-1">
-                      <div className="flex items-center justify-between text-sm font-medium">
-                        <span className="text-muted-foreground">Progress</span>
-                        <span className="font-bold text-foreground">1/3</span>
+                    {dailyChallenges && dailyChallenges.length > 0 ? (
+                      <div className="flex flex-col h-full">
+                        <CardEnhancedHeader className="border-b border-neutral-200 dark:border-neutral-800 pb-4">
+                          <CardEnhancedTitle className="text-lg flex items-center gap-2 font-bold">
+                            <Target className="w-5 h-5 text-foreground" />
+                            Daily Challenges
+                          </CardEnhancedTitle>
+                          <CardEnhancedDescription className="text-muted-foreground mt-1">
+                            Complete challenges to earn XP
+                          </CardEnhancedDescription>
+                        </CardEnhancedHeader>
+                        <CardEnhancedContent className="pt-4 flex flex-col gap-4 flex-1 h-[300px] overflow-y-auto custom-scrollbar">
+                          <div className="space-y-4 pr-2">
+                            {dailyChallenges.map((challenge, index) => {
+                              const currentProg = challengeProgress[challenge.title] || 0;
+                              const progPercent = Math.min((currentProg / challenge.targetCount) * 100, 100);
+                              const isCompleted = currentProg >= challenge.targetCount;
+
+                              return (
+                                <div key={index} className="p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg flex flex-col gap-3 hover:bg-neutral-50 dark:hover:bg-neutral-900/50 transition-colors">
+                                  <div className="flex justify-between items-start">
+                                    <div>
+                                      <h4 className="font-bold text-foreground flex items-center gap-2">
+                                        {challenge.title}
+                                        {challenge.isActive && <span className="bg-red-500 text-white dark:bg-red-500/50 text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1 font-bold shadow-sm animate-pulse-slow">🔥 Today's Hot</span>}
+                                      </h4>
+                                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{challenge.description}</p>
+                                    </div>
+                                    <Badge variant="outline" className="text-yellow-600 dark:text-yellow-400 border-yellow-200 dark:border-yellow-900 font-bold whitespace-nowrap ml-2 shrink-0">
+                                      +{challenge.rewardXp} XP
+                                    </Badge>
+                                  </div>
+                                  <div className="flex items-center justify-between gap-4">
+                                    <div className="flex-1">
+                                      <div className="flex items-center justify-between text-xs font-medium mb-1.5">
+                                        <span className="text-muted-foreground">Progress</span>
+                                        <span className="font-bold text-foreground">{currentProg}/{challenge.targetCount}</span>
+                                      </div>
+                                      <div className="w-full bg-neutral-200 dark:bg-neutral-800 rounded-full h-1.5">
+                                        <div className="bg-black dark:bg-white h-1.5 rounded-full transition-all" style={{ width: `${progPercent}%` }}></div>
+                                      </div>
+                                    </div>
+                                    <Button
+                                      size="sm"
+                                      onClick={() => handleAttemptChallenge(challenge)}
+                                      className="bg-black text-white hover:bg-neutral-800 dark:bg-white dark:text-black dark:hover:bg-neutral-200 shadow-none h-8 text-xs px-4"
+                                    >
+                                      {isCompleted ? "Review" : "Attempt"}
+                                    </Button>
+                                  </div>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </CardEnhancedContent>
                       </div>
-                      <div className="w-full bg-neutral-200 dark:bg-neutral-800 rounded-full h-2">
-                        <div className="bg-black dark:bg-white h-2 rounded-full transition-all" style={{ width: '33%' }}></div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center h-full p-4 text-center">
+                        <Target className="w-8 h-8 text-muted-foreground mb-3 opacity-50" />
+                        <h3 className="font-bold">No Active Challenges</h3>
+                        <p className="text-sm text-muted-foreground mt-1">Check back later for new daily goals!</p>
                       </div>
-                      <Button className="w-full mt-2 bg-black text-white hover:bg-neutral-800 dark:bg-white dark:text-black dark:hover:bg-neutral-200 shadow-none">Continue Refining</Button>
-                    </CardEnhancedContent>
+                    )}
                   </CardEnhanced>
                 </div>
 
                 {/* Learning Modules */}
                 <div key="modules" className="h-full">
-                  <CardEnhanced variant="flat" className="h-full flex flex-col relative group">
+                  <CardEnhanced variant="outline" className="h-full flex flex-col relative group">
                     <div className="drag-handle absolute top-2 right-2 cursor-move opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded">
                       <GripVertical className="w-4 h-4 text-muted-foreground" />
                     </div>
@@ -854,19 +1010,19 @@ const PromptRefinement = () => {
                     </CardEnhancedHeader>
                     <CardEnhancedContent className="flex-1 overflow-y-auto space-y-3 pb-2 custom-scrollbar">
                       <div className="space-y-3">
-                        <div className="flex items-center justify-between p-3 bg-neutral-100 dark:bg-neutral-800 rounded-md">
+                        <div className="flex items-center justify-between p-3 bg-neutral-100 dark:bg-green-800/50 rounded-md">
                           <span className="text-sm font-medium">Basics</span>
-                          <Badge className="text-xs px-2 py-0.5">Done</Badge>
+                          <Badge className="text-xs px-2 py-0.5 rounded-sm">Done</Badge>
                         </div>
-                        <div className="flex items-center justify-between p-3 bg-ocean-mist/20 rounded-md">
+                        <div className="flex items-center justify-between p-3 bg-ocean-mist/20 rounded-md dark:border dark:border-blue-500/70 dark:hover:border dark:hover:border-blue-500">
                           <span className="text-sm font-medium">Context</span>
                           <Badge variant="outline" className="text-xs px-2 py-0.5">Active</Badge>
                         </div>
-                        <div className="flex items-center justify-between p-3 bg-muted/50 rounded-md opacity-60">
+                        <div className="flex items-center justify-between p-3 bg-red-900/50 rounded-md opacity-70">
                           <span className="text-sm font-medium">Advanced</span>
                           <Badge variant="secondary" className="text-xs px-2 py-0.5">Locked</Badge>
                         </div>
-                        <div className="flex items-center justify-between p-3 bg-muted/50 rounded-md opacity-60">
+                        <div className="flex items-center justify-between p-3 bg-red-900/50 rounded-md opacity-60">
                           <span className="text-sm font-medium">Expert</span>
                           <Badge variant="secondary" className="text-xs px-2 py-0.5">Locked</Badge>
                         </div>
@@ -880,6 +1036,89 @@ const PromptRefinement = () => {
         </div>
       </div>
       <Footer />
+
+      {/* Challenge Attempt Modal */}
+      <Dialog open={isAttemptModalOpen} onOpenChange={setIsAttemptModalOpen}>
+        <DialogContent className="max-w-2xl bg-white dark:bg-[#1a1a1a] border-neutral-200 dark:border-neutral-800 p-6 max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl font-bold">
+              <Target className="w-5 h-5 text-foreground" />
+              Attempt: {attemptingChallenge?.title}
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground mt-2">
+              {attemptingChallenge?.description}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 mt-4">
+            <Textarea
+              placeholder="Write your prompt here to solve the challenge..."
+              value={challengeAttemptInput}
+              onChange={(e) => setChallengeAttemptInput(e.target.value)}
+              disabled={attemptingChallenge ? (challengeProgress[attemptingChallenge.title] || 0) >= attemptingChallenge.targetCount : false}
+              className="min-h-[150px] resize-none font-mono text-sm bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 shadow-none disabled:opacity-50"
+            />
+
+            <div className="flex justify-end">
+              <Button
+                onClick={handleSubmitChallengeAttempt}
+                disabled={isSubmittingAttempt || !challengeAttemptInput.trim() || (attemptingChallenge ? (challengeProgress[attemptingChallenge.title] || 0) >= attemptingChallenge.targetCount : false)}
+                className="bg-black text-white hover:bg-neutral-800 dark:bg-white dark:text-black dark:hover:bg-neutral-200 shadow-none"
+              >
+                {attemptingChallenge && (challengeProgress[attemptingChallenge.title] || 0) >= attemptingChallenge.targetCount ? "Limit Reached" : (
+                  isSubmittingAttempt ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      Evaluating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Submit for Evaluation
+                    </>
+                  )
+                )}
+              </Button>
+            </div>
+
+            {challengeEvaluation && (
+              <div className="mt-6 pt-6 border-t border-neutral-200 dark:border-neutral-800 space-y-4 animate-in fade-in zoom-in duration-300">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-3">
+                    <h4 className="font-bold text-lg text-foreground">Evaluation Results</h4>
+                    {challengeEvaluation.awardedXp > 0 && (
+                      <Badge variant="outline" className="text-yellow-600 dark:text-yellow-400 border-yellow-200 dark:border-yellow-900 font-bold bg-yellow-50 dark:bg-yellow-900/20">
+                        +{challengeEvaluation.awardedXp} XP Awarded
+                      </Badge>
+                    )}
+                  </div>
+                  <Badge variant={challengeEvaluation.score.includes("100") ? "default" : "secondary"} className="text-sm px-3 py-1">
+                    Score: {challengeEvaluation.score}
+                  </Badge>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="bg-neutral-50 dark:bg-neutral-900/50 p-4 rounded-lg border border-neutral-200 dark:border-neutral-800">
+                    <h5 className="font-semibold text-sm mb-2 flex items-center gap-2 text-foreground">
+                      <Wand2 className="w-4 h-4" />
+                      Suggestions for Improvement
+                    </h5>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">{challengeEvaluation.suggestions}</p>
+                  </div>
+
+                  <div className="bg-neutral-50 dark:bg-neutral-900/50 p-4 rounded-lg border border-neutral-200 dark:border-neutral-800">
+                    <h5 className="font-semibold text-sm mb-2 flex items-center gap-2 text-foreground">
+                      <Lock className="w-4 h-4" />
+                      Token Efficiency Tips
+                    </h5>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">{challengeEvaluation.tokenEfficiency}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div >
   );
 };

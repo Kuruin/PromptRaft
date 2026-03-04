@@ -41,7 +41,8 @@ const userSchema = new mongoose.Schema({
     xp: { type: Number, default: 0 },
     level: { type: Number, default: 1 },
     streak: { type: Number, default: 0 },
-    lastLoginDate: { type: Date, default: Date.now }
+    lastLoginDate: { type: Date, default: Date.now },
+    isAdmin: { type: Boolean, default: false }
 });
 
 const promptSchema = new mongoose.Schema({
@@ -62,8 +63,18 @@ const promptVersionSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 });
 
+const challengeSchema = new mongoose.Schema({
+    title: { type: String, required: true },
+    description: { type: String, required: true },
+    targetCount: { type: Number, required: true, default: 3 },
+    rewardXp: { type: Number, required: true, default: 100 },
+    isActive: { type: Boolean, default: false },
+    createdAt: { type: Date, default: Date.now }
+});
+
 const User = mongoose.model("User", userSchema);
 const Prompt = mongoose.model("Prompt", promptSchema);
 const PromptVersion = mongoose.model("PromptVersion", promptVersionSchema);
+const Challenge = mongoose.model("Challenge", challengeSchema);
 
-module.exports = { connectDb, User, Prompt, PromptVersion }
+module.exports = { connectDb, User, Prompt, PromptVersion, Challenge }

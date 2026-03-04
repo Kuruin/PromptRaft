@@ -11,6 +11,8 @@ import NotFound from "./pages/NotFound";
 
 import { AuthProvider } from "./context/AuthContext";
 
+import AdminDashboard from "./pages/AdminDashboard";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -25,6 +27,7 @@ const App = () => (
             <Route path="/prompt-refine" element={<PromptRefinement />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/admin" element={<AdminDashboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
