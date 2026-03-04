@@ -187,6 +187,10 @@ router.post("/signin", async (req, res) => {
             return res.status(404).json({ error: "User not found" });
         }
 
+        if (user.isBlocked) {
+            return res.status(403).json({ error: "Your account has been blocked. Contact administrator." });
+        }
+
         // Check password (Text-based as per Schema, though bcrypt is recommended later)
         if (user.password !== password) {
             return res.status(401).json({ error: "Incorrect password" });

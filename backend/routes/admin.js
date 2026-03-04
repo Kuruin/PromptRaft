@@ -79,4 +79,43 @@ router.delete('/challenges/:id', adminMiddleware, async (req, res) => {
     }
 });
 
+// Get all users
+router.get('/users', adminMiddleware, async (req, res) => {
+    try {
+        // Exclude passwords from the query results
+        const users = await User.find().select('-password').sort({ createdAt: -1 });
+        res.json({ users });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
+// Toggle user block status
+router.put('/users/:id/block', adminMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const user = await User.findById(id);
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        if (user.isAdmin) {
+            return res.status(400).json({ message: "Cannot block an admin user" });
+        }
+
+        user.isBlocked = !user.isBlocked;
+        await user.save();
+
+        res.json({
+            message: `User successfully ${user.isBlocked ? 'blocked' : 'unblocked'}`,
+            user: { _id: user._id, isBlocked: user.isBlocked }
+        });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
 module.exports = router;

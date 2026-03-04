@@ -5,7 +5,7 @@ import axios from 'axios';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { CardEnhanced, CardEnhancedHeader, CardEnhancedTitle, CardEnhancedContent } from '@/components/ui/card-enhanced';
-import { ShieldAlert, Plus, Check, Target, Users, Settings, Trash2 } from 'lucide-react';
+import { ShieldAlert, Plus, Check, Target, Users, Settings, Trash2, Ban } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Challenge {
@@ -18,11 +18,29 @@ interface Challenge {
     createdAt: string;
 }
 
+interface UserData {
+    _id: string;
+    username: string;
+    firstName: string;
+    lastName: string;
+    xp: number;
+    level: number;
+    streak: number;
+    lastLoginDate: string;
+    isAdmin: boolean;
+    isBlocked?: boolean;
+    createdAt: string;
+}
+
 export default function AdminDashboard() {
     const { user, isAuthenticated } = useAuth();
     const [challenges, setChallenges] = useState<Challenge[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('challenges');
+
+    // Users state
+    const [usersList, setUsersList] = useState<UserData[]>([]);
+    const [isLoadingUsers, setIsLoadingUsers] = useState(false);
 
     // Form state
     const [title, setTitle] = useState('');
@@ -47,6 +65,25 @@ export default function AdminDashboard() {
             fetchChallenges();
         }
     }, [isAuthenticated, user]);
+
+    const fetchUsers = async () => {
+        setIsLoadingUsers(true);
+        try {
+            const res = await axios.get('http://localhost:3000/api/v1/admin/users');
+            setUsersList(res.data.users);
+        } catch (e) {
+            console.error(e);
+            toast.error("Failed to load users");
+        } finally {
+            setIsLoadingUsers(false);
+        }
+    };
+
+    useEffect(() => {
+        if (activeTab === 'users' && usersList.length === 0) {
+            fetchUsers();
+        }
+    }, [activeTab]);
 
     if (!isAuthenticated || !user?.isAdmin) {
         return <Navigate to="/" replace />;
@@ -87,6 +124,20 @@ export default function AdminDashboard() {
             fetchChallenges();
         } catch (e) {
             toast.error("Failed to delete challenge");
+        }
+    };
+
+    const handleToggleBlock = async (id: string, currentStatus: boolean | undefined) => {
+        try {
+            const res = await axios.put(`http://localhost:3000/api/v1/admin/users/${id}/block`, {}, {
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } // Though technically admin fetch interceptors might handle it, just to be safe if it doesn't
+            });
+            toast.success(res.data.message);
+            setUsersList(usersList.map(u =>
+                u._id === id ? { ...u, isBlocked: !currentStatus } : u
+            ));
+        } catch (e: any) {
+            toast.error(e.response?.data?.message || "Failed to update user block status");
         }
     };
 
@@ -250,15 +301,95 @@ export default function AdminDashboard() {
                         </div>
                     )}
 
-                    {/* Placeholder for Users Tab */}
+                    {/* Users Tab */}
                     {activeTab === 'users' && (
-                        <div className="flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-border rounded-xl bg-muted/20">
-                            <Users className="w-16 h-16 text-muted-foreground mb-4 opacity-50" />
-                            <h3 className="text-2xl font-bold">User Management</h3>
-                            <p className="text-muted-foreground mt-2 max-w-md">
-                                This section will allow you to view registered users, modify their XP/roles, and moderate their prompt projects.
-                            </p>
-                            <Button variant="outline" className="mt-8">Module Coming Soon</Button>
+                        <div className="h-full flex flex-col">
+                            <CardEnhanced variant="custom1" className="flex-1 flex flex-col min-h-0">
+                                <CardEnhancedHeader>
+                                    <div className="flex items-center justify-between">
+                                        <CardEnhancedTitle>Registered Users</CardEnhancedTitle>
+                                        <Button variant="outline" size="sm" onClick={fetchUsers} disabled={isLoadingUsers}>
+                                            {isLoadingUsers ? 'Refreshing...' : 'Refresh'}
+                                        </Button>
+                                    </div>
+                                </CardEnhancedHeader>
+                                <CardEnhancedContent className="flex-1 overflow-y-auto custom-scrollbar p-0">
+                                    {isLoadingUsers && usersList.length === 0 ? (
+                                        <div className="flex-1 flex flex-col items-center justify-center p-8">
+                                            <p className="text-muted-foreground animate-pulse">Loading users...</p>
+                                        </div>
+                                    ) : (
+                                        <div className="w-full">
+                                            <table className="w-full text-left border-collapse">
+                                                <thead className="sticky top-0 bg-neutral-100 dark:bg-neutral-800 border-b border-border z-10">
+                                                    <tr>
+                                                        <th className="p-4 font-medium text-sm text-muted-foreground">User</th>
+                                                        <th className="p-4 font-medium text-sm text-muted-foreground">Level / XP</th>
+                                                        <th className="p-4 font-medium text-sm text-muted-foreground">Streak</th>
+                                                        <th className="p-4 font-medium text-sm text-muted-foreground">Joined</th>
+                                                        <th className="p-4 font-medium text-sm text-muted-foreground">Role</th>
+                                                        <th className="p-4 font-medium text-sm text-muted-foreground text-right">Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {usersList.map((u) => (
+                                                        <tr key={u._id} className="border-b border-border hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
+                                                            <td className="p-4">
+                                                                <div className="flex flex-col">
+                                                                    <span className="font-bold text-foreground">{u.firstName} {u.lastName}</span>
+                                                                    <span className="text-sm text-muted-foreground">@{u.username.split('@')[0]}</span>
+                                                                </div>
+                                                            </td>
+                                                            <td className="p-4">
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="bg-neutral-200 dark:bg-neutral-700 px-2 py-1 rounded text-xs font-bold">Lvl {u.level}</span>
+                                                                    <span className="text-sm text-muted-foreground">{u.xp} XP</span>
+                                                                </div>
+                                                            </td>
+                                                            <td className="p-4">
+                                                                <span className="flex items-center gap-1 text-sm"><span className="text-orange-500">🔥</span> {u.streak}</span>
+                                                            </td>
+                                                            <td className="p-4 text-sm text-muted-foreground">
+                                                                {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'N/A'}
+                                                            </td>
+                                                            <td className="p-4">
+                                                                {u.isAdmin ? (
+                                                                    <span className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 px-2 py-1 rounded text-xs font-bold flex items-center gap-1 w-max">
+                                                                        <ShieldAlert className="w-3 h-3" /> Admin
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400 px-2 py-1 rounded text-xs font-medium w-max">
+                                                                        {u.isBlocked ? (
+                                                                            <span className="flex items-center gap-1 text-red-600 dark:text-red-400"><Ban className="w-3 h-3" /> Blocked</span>
+                                                                        ) : 'User'}
+                                                                    </span>
+                                                                )}
+                                                            </td>
+                                                            <td className="p-4 text-right">
+                                                                {!u.isAdmin && (
+                                                                    <Button
+                                                                        variant="outline"
+                                                                        size="sm"
+                                                                        onClick={() => handleToggleBlock(u._id, u.isBlocked)}
+                                                                        className={u.isBlocked ? "text-green-600 border-green-200 hover:bg-green-50 dark:border-green-900/50 dark:text-green-400 dark:hover:bg-green-900/20" : "text-red-600 border-red-200 hover:bg-red-50 dark:border-red-900/50 dark:text-red-400 dark:hover:bg-red-900/20"}
+                                                                    >
+                                                                        {u.isBlocked ? 'Unblock' : 'Block'}
+                                                                    </Button>
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                            {usersList.length === 0 && !isLoadingUsers && (
+                                                <div className="p-8 text-center text-muted-foreground">
+                                                    No users found.
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </CardEnhancedContent>
+                            </CardEnhanced>
                         </div>
                     )}
 
