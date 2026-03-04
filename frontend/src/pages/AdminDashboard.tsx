@@ -381,7 +381,7 @@ export default function AdminDashboard() {
                                                             </td>
                                                             <td className="p-4">
                                                                 <div className="flex items-center gap-2">
-                                                                    <span className="bg-neutral-200 dark:bg-neutral-700 px-2 py-1 rounded text-xs font-bold">Lvl {u.level}</span>
+                                                                    <span className="bg-neutral-200 dark:bg-neutral-700 px-2 py-1 rounded text-xs font-bold tracking-wide">Lvl {u.level}</span>
                                                                     <span className="text-sm text-muted-foreground">{u.xp} XP</span>
                                                                 </div>
                                                             </td>

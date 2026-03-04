@@ -30,6 +30,9 @@ export default function Header() {
           <Link to="/prompt-refine" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">
             Prompt Refiner
           </Link>
+          <Link to="/create" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">
+            Submit
+          </Link>
           <ThemeToggle />
           {isAuthenticated ? (
             <Button variant="outline" onClick={logout}>
