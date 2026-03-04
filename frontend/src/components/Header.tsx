@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Sparkles } from "lucide-react";
@@ -7,6 +7,8 @@ import { toast } from "sonner";
 
 export default function Header() {
   const { isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/60 dark:bg-[#121212]">
       <div className="flex h-16 items-center justify-between w-full px-6">
@@ -18,7 +20,11 @@ export default function Header() {
         </Link>
 
         <nav className="flex items-center gap-6">
-          <Link to="/" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">
+          <Link
+            to="/"
+            className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
+            onDoubleClick={() => navigate("/admin")}
+          >
             Home
           </Link>
           <Link to="/prompt-refine" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">
