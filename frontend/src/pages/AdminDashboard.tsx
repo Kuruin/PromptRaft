@@ -42,6 +42,10 @@ export default function AdminDashboard() {
     const [usersList, setUsersList] = useState<UserData[]>([]);
     const [isLoadingUsers, setIsLoadingUsers] = useState(false);
 
+    // Settings state
+    const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
+    const [isLoadingSettings, setIsLoadingSettings] = useState(false);
+
     // Form state
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
@@ -82,6 +86,27 @@ export default function AdminDashboard() {
     useEffect(() => {
         if (activeTab === 'users' && usersList.length === 0) {
             fetchUsers();
+        }
+    }, [activeTab]);
+
+    const fetchSettings = async () => {
+        setIsLoadingSettings(true);
+        try {
+            const res = await axios.get('http://localhost:3000/api/v1/admin/settings', {
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+            });
+            setIsMaintenanceMode(res.data.settings.isMaintenanceMode);
+        } catch (e) {
+            console.error(e);
+            toast.error("Failed to load settings");
+        } finally {
+            setIsLoadingSettings(false);
+        }
+    };
+
+    useEffect(() => {
+        if (activeTab === 'settings') {
+            fetchSettings();
         }
     }, [activeTab]);
 
@@ -138,6 +163,20 @@ export default function AdminDashboard() {
             ));
         } catch (e: any) {
             toast.error(e.response?.data?.message || "Failed to update user block status");
+        }
+    };
+
+    const handleToggleMaintenance = async () => {
+        if (!window.confirm(`Are you sure you want to ${isMaintenanceMode ? 'disable' : 'enable'} maintenance mode?`)) return;
+        try {
+            const res = await axios.put('http://localhost:3000/api/v1/admin/settings/maintenance', {}, {
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+            });
+            setIsMaintenanceMode(res.data.settings.isMaintenanceMode);
+            toast.success(res.data.message);
+        } catch (e) {
+            console.error(e);
+            toast.error("Failed to update maintenance mode");
         }
     };
 
@@ -393,15 +432,41 @@ export default function AdminDashboard() {
                         </div>
                     )}
 
-                    {/* Placeholder for Settings Tab */}
+                    {/* Settings Tab */}
                     {activeTab === 'settings' && (
-                        <div className="flex flex-col items-center justify-center py-20 text-center border-2 border-dashed border-border rounded-xl bg-muted/20">
-                            <Settings className="w-16 h-16 text-muted-foreground mb-4 opacity-50" />
-                            <h3 className="text-2xl font-bold">Platform Settings</h3>
-                            <p className="text-muted-foreground mt-2 max-w-md">
-                                Configure global application variables, theme defaults, and API keys for the backend services.
-                            </p>
-                            <Button variant="outline" className="mt-8">Module Coming Soon</Button>
+                        <div className="h-full flex flex-col gap-6">
+                            <CardEnhanced variant="outline" className="h-full max-h-[600px] flex flex-col">
+                                <CardEnhancedHeader>
+                                    <div className="flex items-center gap-2">
+                                        <Settings className="w-5 h-5" />
+                                        <CardEnhancedTitle>Platform Configuration</CardEnhancedTitle>
+                                    </div>
+                                </CardEnhancedHeader>
+                                <CardEnhancedContent className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8">
+
+                                    {/* Maintenance Control */}
+                                    <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 p-6 border border-neutral-200 dark:border-neutral-800 rounded-xl bg-neutral-50 dark:bg-neutral-800/20">
+                                        <div>
+                                            <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
+                                                Maintenance Mode
+                                                {isMaintenanceMode && <span className="bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400 text-xs px-2 py-0.5 rounded font-bold animate-pulse-slow">ACTIVE</span>}
+                                            </h3>
+                                            <p className="text-muted-foreground text-sm max-w-lg">
+                                                When enabled, standard users will be unable to log in, sign up, or use the platform. They will be met with a maintenance screen. Admins are unaffected and can continue to access the dashboard.
+                                            </p>
+                                        </div>
+                                        <Button
+                                            variant={isMaintenanceMode ? "custom3" : "default"}
+                                            onClick={handleToggleMaintenance}
+                                            disabled={isLoadingSettings}
+                                            className={isMaintenanceMode ? "text-red-500 hover:text-red-600 hover:bg-red-50 border border-red-200 dark:border-red-900/50 dark:hover:bg-red-900/20 w-full md:w-auto" : "w-full md:w-auto mt-2 md:mt-0"}
+                                        >
+                                            {isLoadingSettings ? "Loading..." : isMaintenanceMode ? "Disable Maintenance Mode" : "Enable Maintenance Mode"}
+                                        </Button>
+                                    </div>
+
+                                </CardEnhancedContent>
+                            </CardEnhanced>
                         </div>
                     )}
                 </div>

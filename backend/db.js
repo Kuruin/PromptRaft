@@ -74,9 +74,14 @@ const challengeSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 });
 
+const settingsSchema = new mongoose.Schema({
+    isMaintenanceMode: { type: Boolean, default: false }
+});
+
 const User = mongoose.model("User", userSchema);
 const Prompt = mongoose.model("Prompt", promptSchema);
 const PromptVersion = mongoose.model("PromptVersion", promptVersionSchema);
 const Challenge = mongoose.model("Challenge", challengeSchema);
+const Settings = mongoose.model("Settings", settingsSchema);
 
-module.exports = { connectDb, User, Prompt, PromptVersion, Challenge }
+module.exports = { connectDb, User, Prompt, PromptVersion, Challenge, Settings }

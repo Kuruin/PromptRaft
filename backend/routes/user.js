@@ -6,7 +6,7 @@ const router = express.Router();
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 const z = require('zod');
 const { signupSchema, signinSchema } = require("../schema");
-const { connectDb, User } = require("../db");
+const { connectDb, User, Settings } = require("../db");
 const jwt = require("jsonwebtoken");
 connectDb();
 
@@ -148,7 +148,13 @@ router.post("/signup", async (req, res) => {
     if (!valid.success) {
         return res.status(411).json({ msg: "Enter valid inputs" })
     }
-    else {
+
+    try {
+        const settings = await Settings.findOne();
+        if (settings && settings.isMaintenanceMode) {
+            return res.status(503).json({ error: "Platform is currently under maintenance. New signups are disabled." });
+        }
+
         const dbCall = await User.findOne({ username })
         if (!dbCall) {
             const newUser = await User.create({
@@ -163,6 +169,9 @@ router.post("/signup", async (req, res) => {
             return;
         }
         res.status(403).json({ error: "User already exists" })
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: "Server error during signup" });
     }
 })
 
@@ -189,6 +198,11 @@ router.post("/signin", async (req, res) => {
 
         if (user.isBlocked) {
             return res.status(403).json({ error: "Your account has been blocked. Contact administrator." });
+        }
+
+        const settings = await Settings.findOne();
+        if (settings && settings.isMaintenanceMode && !user.isAdmin) {
+            return res.status(503).json({ error: "Platform is currently under maintenance. Please try again later." });
         }
 
         // Check password (Text-based as per Schema, though bcrypt is recommended later)

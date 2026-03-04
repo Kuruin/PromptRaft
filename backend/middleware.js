@@ -1,8 +1,8 @@
 const jwt = require("jsonwebtoken");
 
-const { User } = require("./db");
+const { User, Settings } = require("./db");
 
-const authMiddleware = (req, res, next) => {
+const authMiddleware = async (req, res, next) => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -17,6 +17,16 @@ const authMiddleware = (req, res, next) => {
         const decoded = jwt.verify(token, process.env.SECRET_TOKEN);
         if (decoded.id) {
             req.userId = decoded.id;
+
+            // Check maintenance mode
+            const settings = await Settings.findOne();
+            if (settings && settings.isMaintenanceMode) {
+                const user = await User.findById(req.userId);
+                if (!user || !user.isAdmin) {
+                    return res.status(503).json({ message: "Platform is currently under maintenance." });
+                }
+            }
+
             next();
         } else {
             return res.status(403).json({

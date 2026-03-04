@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { User, Challenge } = require('../db');
+const { User, Challenge, Settings } = require('../db');
 const { adminMiddleware } = require('../middleware');
 
 // Create a new daily challenge
@@ -111,6 +111,39 @@ router.put('/users/:id/block', adminMiddleware, async (req, res) => {
         res.json({
             message: `User successfully ${user.isBlocked ? 'blocked' : 'unblocked'}`,
             user: { _id: user._id, isBlocked: user.isBlocked }
+        });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
+// Get settings
+router.get('/settings', adminMiddleware, async (req, res) => {
+    try {
+        let settings = await Settings.findOne();
+        if (!settings) {
+            settings = await Settings.create({ isMaintenanceMode: false });
+        }
+        res.json({ settings });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
+// Toggle maintenance mode
+router.put('/settings/maintenance', adminMiddleware, async (req, res) => {
+    try {
+        let settings = await Settings.findOne();
+        if (!settings) {
+            settings = await Settings.create({ isMaintenanceMode: false });
+        }
+        settings.isMaintenanceMode = !settings.isMaintenanceMode;
+        await settings.save();
+        res.json({
+            message: `Maintenance mode ${settings.isMaintenanceMode ? 'enabled' : 'disabled'}`,
+            settings
         });
     } catch (e) {
         console.error(e);
