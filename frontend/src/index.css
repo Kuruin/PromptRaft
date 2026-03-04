@@ -8,131 +8,85 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Nautical Color Palette - Light Mode */
+    /* Minimalist Light Mode */
     --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
+    --foreground: 0 0% 9%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 0 0% 9%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 0 0% 9%;
 
-    /* Deep Navy Primary */
-    --primary: 217 91% 30%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 98%;
 
-    /* Ocean Blue Secondary */
-    --secondary: 197 71% 85%;
-    --secondary-foreground: 217 91% 20%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
 
-    /* Muted Ocean Tones */
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 25% 35%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
 
-    /* Gold Accent */
-    --accent: 43 90% 55%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 0 0% 9%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 214 32% 88%;
-    --input: 214 32% 91%;
-    --ring: 217 91% 30%;
-
-    /* Custom Design Tokens */
-    --ocean-deep: 220 83% 15%;
-    --ocean-primary: 217 91% 30%;
-    --ocean-light: 197 71% 65%;
-    --ocean-mist: 197 44% 93%;
-    --gold-accent: 43 90% 55%;
-    --gold-light: 48 95% 85%;
-
-    /* Gradients */
-    --gradient-ocean: linear-gradient(135deg, hsl(220 83% 15%) 0%, hsl(217 91% 30%) 100%);
-    --gradient-waves: linear-gradient(270deg, hsl(197 71% 65%) 0%, hsl(197 44% 93%) 100%);
-    --gradient-gold: linear-gradient(135deg, hsl(43 90% 55%) 0%, hsl(48 95% 85%) 100%);
-
-    /* Shadows */
-    --shadow-ocean: 0 10px 25px -5px hsl(217 91% 30% / 0.3);
-    --shadow-glow: 0 0 30px hsl(197 71% 65% / 0.4);
-    --shadow-elegant: 0 20px 40px -10px hsl(220 83% 15% / 0.2);
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 0 0% 3.9%;
 
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
-    /* Dark Nautical Color Palette */
-    --background: 220 40% 10%;
-    --foreground: 210 40% 98%;
+    /* Minimalist Dark Mode (#111 inspired) */
+    --background: 0 0% 6.7%;
+    --foreground: 0 0% 98%;
 
-    --card: 220 40% 13%;
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 9%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 220 40% 13%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 9%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 197 71% 70%;
-    --primary-foreground: 220 40% 10%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
 
-    --secondary: 217 60% 25%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 217 40% 18%;
-    --muted-foreground: 215 20% 75%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
 
-    --accent: 43 90% 65%;
-    --accent-foreground: 220 40% 10%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
 
-    --destructive: 0 70% 55%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 217 40% 22%;
-    --input: 217 40% 18%;
-    --ring: 197 71% 70%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 83.1%;
 
-    /* Dark Mode Custom Tokens */
-    --ocean-deep: 220 70% 8%;
-    --ocean-primary: 197 71% 70%;
-    --ocean-light: 197 71% 80%;
-    --ocean-mist: 217 40% 22%;
-    --gold-accent: 43 90% 65%;
-    --gold-light: 48 95% 75%;
-
-    /* Dark Gradients */
-    --gradient-ocean: linear-gradient(135deg, hsl(220 70% 15%) 0%, hsl(217 60% 25%) 100%);
-    --gradient-waves: linear-gradient(270deg, hsl(217 60% 25%) 0%, hsl(217 40% 18%) 100%);
-    --gradient-gold: linear-gradient(135deg, hsl(43 90% 65%) 0%, hsl(48 95% 70%) 100%);
-
-    --shadow-ocean: 0 10px 25px -5px hsl(220 70% 5% / 0.6);
-    --shadow-glow: 0 0 30px hsl(197 71% 70% / 0.25);
-    --shadow-elegant: 0 20px 40px -10px hsl(220 70% 5% / 0.5);
-    
-    --sidebar-background: 220 40% 13%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 197 71% 70%;
-    --sidebar-primary-foreground: 220 40% 10%;
-    --sidebar-accent: 217 40% 18%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217 40% 22%;
-    --sidebar-ring: 197 71% 70%;
+    --sidebar-background: 0 0% 9%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 0 0% 98%;
+    --sidebar-primary-foreground: 0 0% 9%;
+    --sidebar-accent: 0 0% 14.9%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 14.9%;
+    --sidebar-ring: 0 0% 83.1%;
   }
 }
 
@@ -142,6 +96,27 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans tracking-tight selection:bg-neutral-800 selection:text-white dark:selection:bg-neutral-200 dark:selection:text-black;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-sans tracking-tighter;
+  }
+
+  code,
+  pre {
+    @apply font-mono;
+  }
+}
+
+/* Minimal Utilities */
+@layer utilities {
+  .subtle-border {
+    @apply border border-neutral-200 dark:border-neutral-800;
   }
 }

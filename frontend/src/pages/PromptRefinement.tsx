@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useUndoRedo } from "@/hooks/useUndoRedo";
 import { useLongPress } from "@/hooks/useLongPress";
 import { Undo2, Redo2 } from "lucide-react";
@@ -41,6 +42,14 @@ interface PromptProject {
   _id: string;
   title: string;
   updatedAt: string;
+}
+
+interface DailyChallenge {
+  title: string;
+  description: string;
+  targetCount: number;
+  rewardXp: number;
+  isActive: boolean;
 }
 
 const PromptRefinement = () => {
@@ -92,6 +101,27 @@ const PromptRefinement = () => {
   const [isOutputFullScreen, setIsOutputFullScreen] = useState(false);
   const [activeTab, setActiveTab] = useState("refine");
 
+  const [dailyChallenges, setDailyChallenges] = useState<DailyChallenge[]>([]);
+
+  // Attempt Challenge Modal State
+  const [isAttemptModalOpen, setIsAttemptModalOpen] = useState(false);
+  const [attemptingChallenge, setAttemptingChallenge] = useState<DailyChallenge | null>(null);
+  const [challengeAttemptInput, setChallengeAttemptInput] = useState("");
+  const [challengeEvaluation, setChallengeEvaluation] = useState<any>(null);
+  const [isSubmittingAttempt, setIsSubmittingAttempt] = useState(false);
+  const [challengeProgress, setChallengeProgress] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    const savedProgress = localStorage.getItem('challenge_progress');
+    if (savedProgress) {
+      try {
+        setChallengeProgress(JSON.parse(savedProgress));
+      } catch (e) {
+        // Ignored
+      }
+    }
+  }, []);
+
   const level = user?.level || 1;
   const xp = user?.xp || 0;
   const streak = user?.streak || 0;
@@ -102,7 +132,17 @@ const PromptRefinement = () => {
     if (isAuthenticated) {
       fetchPrompts();
     }
+    fetchDailyChallenge();
   }, [isAuthenticated]);
+
+  const fetchDailyChallenge = async () => {
+    try {
+      const res = await axios.get("http://localhost:3000/api/v1/challenges/daily");
+      setDailyChallenges(res.data.challenges || []);
+    } catch (e) {
+      console.error("Failed to fetch daily challenge", e);
+    }
+  };
 
   const fetchPrompts = async () => {
     try {
@@ -131,6 +171,7 @@ const PromptRefinement = () => {
     setRefinedFeedback("");
     setUserPercentage(0);
     setBackendPercentage(0);
+    setActiveTab("refine");
   };
 
   const handleSelectProjectWrapper = async (id: string) => {
@@ -343,6 +384,75 @@ const PromptRefinement = () => {
     setActiveTab(value);
   };
 
+  const handleAttemptChallenge = (challenge: DailyChallenge) => {
+    setAttemptingChallenge(challenge);
+    const cached = sessionStorage.getItem(`challenge_eval_${challenge.title}`);
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        setChallengeAttemptInput(parsed.input || "");
+        setChallengeEvaluation(parsed.evaluation || null);
+      } catch (e) {
+        setChallengeAttemptInput("");
+        setChallengeEvaluation(null);
+      }
+    } else {
+      setChallengeAttemptInput("");
+      setChallengeEvaluation(null);
+    }
+    setIsAttemptModalOpen(true);
+  };
+
+  const handleSubmitChallengeAttempt = async () => {
+    if (!challengeAttemptInput.trim() || !attemptingChallenge) return;
+
+    // Prevent duplicate backend call if input is identical to what's already evaluated
+    const cached = sessionStorage.getItem(`challenge_eval_${attemptingChallenge.title}`);
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        if (parsed.input === challengeAttemptInput) {
+          toast.info("No changes found, please try again with a different prompt.");
+          return;
+        }
+      } catch (e) {
+        // Ignore parse error and proceed with evaluation
+      }
+    }
+
+    setIsSubmittingAttempt(true);
+    try {
+      const res = await axios.post("http://localhost:3000/api/v1/user/challenge-evaluate", {
+        challengeTitle: attemptingChallenge.title,
+        challengeDescription: attemptingChallenge.description,
+        userPrompt: challengeAttemptInput,
+        rewardXp: attemptingChallenge.rewardXp
+      }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+
+      setChallengeEvaluation(res.data);
+      sessionStorage.setItem(`challenge_eval_${attemptingChallenge.title}`, JSON.stringify({
+        input: challengeAttemptInput,
+        evaluation: res.data
+      }));
+
+      const currentProg = challengeProgress[attemptingChallenge.title] || 0;
+      const newProgress = currentProg + 1;
+      const updatedProgress = { ...challengeProgress, [attemptingChallenge.title]: newProgress };
+      setChallengeProgress(updatedProgress);
+      localStorage.setItem('challenge_progress', JSON.stringify(updatedProgress));
+
+      refreshProfile(); // Get XP/Streak updates if backend implements them
+      toast.success("Challenge evaluated!");
+    } catch (e) {
+      toast.error("Evaluation failed.");
+      console.error(e);
+    } finally {
+      setIsSubmittingAttempt(false);
+    }
+  };
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success("Copied to clipboard!");
@@ -408,7 +518,7 @@ const PromptRefinement = () => {
   };
 
   return (
-    <div className="min-h-screen dark:bg-[#1a1a1a] flex flex-col">
+    <div className="min-h-screen dark:bg-[#1a1a1a] flex flex-col overflow-y-hidden">
       <Header />
       <div className="flex flex-1">
         {isAuthenticated && (
@@ -433,61 +543,61 @@ const PromptRefinement = () => {
               )}
               <div>
                 <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-3xl font-bold text-foreground">
+                  <h1 className="text-4xl font-heading font-extrabold tracking-tight text-foreground">
                     {selectedPromptId ? "Project Workspace" : "Prompt Refinement Studio"}
                   </h1>
                   {selectedPromptId && (
                     <Button
-                      variant="destructive"
+                      variant="custom2"
                       size="sm"
                       onClick={handleDeleteProject}
-                      className="h-8 w-8 p-0 rounded-full"
+                      className="h-8 w-8 p-0 rounded-md"
                       title="Delete Project"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   )}
                 </div>
-                <p className="text-muted-foreground">Transform your prompts into powerful instructions</p>
+                <p className="text-muted-foreground text-sm font-medium">Transform your prompts into powerful instructions</p>
               </div>
             </div>
 
             <div className="flex items-center space-x-6">
               <div className="text-center">
                 <div className="text-sm text-muted-foreground">Level</div>
-                <div className="text-lg font-bold text-ocean-primary">{level}</div>
+                <div className="text-lg font-bold text-foreground">{level}</div>
               </div>
               <div className="text-center">
                 <div className="text-sm text-muted-foreground">Streak</div>
-                <div className="text-lg font-bold text-gold-accent">{streak}🔥</div>
+                <div className="text-lg font-bold text-foreground">{streak}🔥</div>
               </div>
-              <div className="text-center min-w-32">
-                <div className="text-sm text-muted-foreground">XP Progress</div>
-                <div className="w-full bg-muted rounded-full h-2 mt-1">
+              <div className="text-center min-w-32 border border-neutral-200 dark:border-neutral-800 p-3 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50">
+                <div className="text-sm font-medium text-foreground mb-2 flex flex-col">
+                  <span>XP Progress</span>
+                  <span className="text-muted-foreground font-mono text-xs">{xp} / {nextLevelXP}</span>
+                </div>
+                <div className="w-full bg-neutral-200 dark:bg-neutral-800 rounded-md h-2 mt-1 overflow-hidden">
                   <div
-                    className="bg-black dark:bg-white/90 h-2 rounded-full transition-all duration-300"
+                    className="bg-black dark:bg-white h-2 rounded-md transition-all duration-700 ease-out"
                     style={{ width: `${xpProgress}%` }}
                   />
-                </div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  {xp}/{nextLevelXP}
                 </div>
               </div>
             </div>
           </div>
           <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-8">
-              <TabsTrigger value="refine" className="flex items-center gap-2">
+            <TabsList className="grid w-full grid-cols-2 mb-8 bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 p-1 rounded-lg">
+              <TabsTrigger value="refine" className="flex items-center gap-2 rounded-md data-[state=active]:bg-white data-[state=active]:dark:bg-black data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-neutral-200 dark:data-[state=active]:ring-neutral-800 transition-all duration-200">
                 <Wand2 className="w-4 h-4" />
                 Refine Prompts
               </TabsTrigger>
-              <TabsTrigger value="learn" className="flex items-center gap-2">
+              <TabsTrigger value="learn" className="flex items-center gap-2 rounded-md data-[state=active]:bg-white data-[state=active]:dark:bg-black data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:ring-1 data-[state=active]:ring-neutral-200 dark:data-[state=active]:ring-neutral-800 transition-all duration-200">
                 <BookOpen className="w-4 h-4" />
                 Learn & Practice
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="refine" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-in-out">
+            <TabsContent value="refine" className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
               {/* Version Controls */}
               {selectedPromptId && versions.length > 0 && (
                 <div className="flex items-center justify-between bg-muted/30 p-4 rounded-lg">
@@ -549,12 +659,12 @@ const PromptRefinement = () => {
                 } ${isOutputFullScreen ? "fixed inset-0 z-50 bg-background p-8 overflow-y-auto" : ""}`} >
                 {/* Input Section */}
                 {!isOutputFullScreen && (
-                  <CardEnhanced variant="ocean" className={`relative h-fit dark:bg-[#1f1f1f]/100 ${isInputFullScreen ? "max-w-5xl mx-auto w-full h-auto" : ""
+                  <CardEnhanced variant="default" className={`relative h-fit ${isInputFullScreen ? "max-w-5xl mx-auto w-full h-auto" : ""
                     }`}>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="absolute top-2 right-2 z-50"
+                      className="absolute top-2 right-2 z-50 text-muted-foreground hover:text-foreground hover:bg-neutral-100 dark:hover:bg-neutral-800"
                       onClick={() => setIsInputFullScreen(!isInputFullScreen)}
                     >
                       {isInputFullScreen ? (
@@ -563,14 +673,14 @@ const PromptRefinement = () => {
                         <Maximize2 className="w-4 h-4" />
                       )}
                     </Button>
-                    <CardEnhancedHeader>
+                    <CardEnhancedHeader className="border-b border-neutral-200 dark:border-neutral-800 pb-4">
                       <div className="flex items-center justify-between w-full">
                         <div>
-                          <CardEnhancedTitle className="flex items-center gap-2">
-                            <Target className="w-5 h-5" />
+                          <CardEnhancedTitle className="flex items-center gap-2 text-foreground font-bold font-sans">
+                            <Target className="w-4 h-4" />
                             Editor
                           </CardEnhancedTitle>
-                          <CardEnhancedDescription>
+                          <CardEnhancedDescription className="text-muted-foreground">
                             Edit your prompt or select a version
                           </CardEnhancedDescription>
                         </div>
@@ -598,28 +708,27 @@ const PromptRefinement = () => {
                         </div>
                       </div>
                     </CardEnhancedHeader>
-                    <CardEnhancedContent className="space-y-4">
+                    <CardEnhancedContent className="pt-6 space-y-4">
                       <Textarea
                         placeholder="Enter your prompt here... For example: 'Write me a blog post about AI'"
                         value={originalPrompt}
                         onChange={(e) => setOriginalPrompt(e.target.value)}
-                        className="min-h-32 resize-none"
+                        className="min-h-[200px] resize-none font-mono text-sm bg-background border border-neutral-200 dark:border-neutral-800 focus:border-neutral-400 dark:focus:border-neutral-500 shadow-none text-foreground placeholder:text-muted-foreground"
                       />
-                      <div className="flex gap-2">
+                      <div className="flex gap-3 mt-4">
                         <Button
                           variant="outline"
                           onClick={handleSaveVersion}
                           disabled={isSaving || !originalPrompt.trim() || !isAuthenticated}
-                          className="flex-1"
+                          className="flex-1 bg-transparent hover:bg-neutral-50 dark:hover:bg-neutral-900 border-neutral-200 dark:border-neutral-800"
                         >
                           <Save className="w-4 h-4 mr-2" />
                           {isSaving ? "Saving..." : "Save Version"}
                         </Button>
                         <Button
-                          variant="custom1"
                           onClick={handleRefinePrompt}
                           disabled={isRefining || !originalPrompt.trim()}
-                          className="flex-1"
+                          className="flex-1 bg-black text-white hover:bg-neutral-800 dark:bg-white dark:text-black dark:hover:bg-neutral-200 shadow-none"
                         >
                           {isRefining ? (
                             <>
@@ -667,30 +776,30 @@ const PromptRefinement = () => {
 
                 {/* Output Section */}
                 {!isInputFullScreen && (
-                  <CardEnhanced variant="gold" className={`relative h-50 ${isOutputFullScreen ? "fixed top-10 right-10 bottom-10 z-50 md:w-1/2 h-auto" : ""}`}>
-                    <Button variant="ghost" size="icon" className="absolute top-2 right-2 z-50" onClick={() => setIsOutputFullScreen(!isOutputFullScreen)}>
+                  <CardEnhanced variant="accent" className={`relative h-50 ${isOutputFullScreen ? "fixed top-10 right-10 bottom-10 z-50 md:w-1/2 h-auto" : ""}`}>
+                    <Button variant="ghost" size="icon" className="absolute top-2 right-2 z-50 text-muted-foreground hover:text-foreground" onClick={() => setIsOutputFullScreen(!isOutputFullScreen)}>
                       {isOutputFullScreen ? <Minimize2 className="w-4 h-4"></Minimize2> : <Maximize2 className="w-4 h-4"></Maximize2>}
                     </Button>
-                    <CardEnhancedHeader>
-                      <CardEnhancedTitle className="flex items-center gap-2">
-                        <Sparkles className="w-5 h-5" />
+                    <CardEnhancedHeader className="border-b border-neutral-200 dark:border-neutral-800 pb-4">
+                      <CardEnhancedTitle className="flex items-center gap-2 text-foreground font-bold font-sans">
+                        <Sparkles className="w-4 h-4" />
                         Optimized Version
                       </CardEnhancedTitle>
-                      <CardEnhancedDescription>
+                      <CardEnhancedDescription className="text-muted-foreground">
                         AI suggestions will appear here
                       </CardEnhancedDescription>
                     </CardEnhancedHeader>
-                    <CardEnhancedContent className="space-y-4">
-                      <div className="min-h-32 p-4 bg-muted/50 rounded-lg border-2 border-dashed border-muted-foreground/20">
+                    <CardEnhancedContent className="pt-6 space-y-4">
+                      <div className="min-h-[200px] p-5 bg-background rounded-lg border border-neutral-200 dark:border-neutral-800">
                         {refinedPrompt ? (
                           <div className="space-y-3">
-                            <p className="text-sm leading-relaxed">{refinedPrompt}</p>
-                            <div className="flex gap-2 pt-2 border-t">
+                            <p className="text-sm leading-relaxed font-mono text-foreground whitespace-pre-wrap">{refinedPrompt}</p>
+                            <div className="flex gap-2 pt-4 mt-2 border-t border-neutral-100 dark:border-neutral-800">
                               <Button
-                                variant="custom1"
+                                variant="outline"
                                 size="sm"
                                 onClick={() => copyToClipboard(refinedPrompt)}
-                                className="flex-1"
+                                className="flex-1 bg-transparent hover:bg-neutral-100 dark:hover:bg-neutral-800 border-neutral-200 dark:border-neutral-800"
                               >
                                 <Copy className="w-4 h-4 mr-2" />
                                 Copy
@@ -734,9 +843,9 @@ const PromptRefinement = () => {
               </div>
 
               {/* Quick Tips */}
-              <CardEnhanced variant="glass">
-                <CardEnhancedHeader>
-                  <CardEnhancedTitle>💡 Pro Tips for Better Prompts</CardEnhancedTitle>
+              <CardEnhanced variant="flat">
+                <CardEnhancedHeader className="border-b border-neutral-200 dark:border-neutral-700/50 pb-4">
+                  <CardEnhancedTitle className="text-lg font-bold">💡 Pro Tips for Better Prompts</CardEnhancedTitle>
                 </CardEnhancedHeader>
                 <CardEnhancedContent>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -775,13 +884,13 @@ const PromptRefinement = () => {
               >
                 {/* Level Card */}
                 <div key="level" className="h-full">
-                  <CardEnhanced variant="ocean" className="text-center h-full flex flex-col relative group">
-                    <div className="drag-handle absolute top-2 right-2 cursor-move opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10 rounded">
+                  <CardEnhanced variant="outline" className="text-center h-full flex flex-col relative group">
+                    <div className="drag-handle absolute top-2 right-2 cursor-move opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded">
                       <GripVertical className="w-4 h-4 text-muted-foreground" />
                     </div>
                     <CardEnhancedContent className="p-3 flex flex-col items-center justify-center h-full">
-                      <Trophy className="w-10 h-10 text-gold-accent mb-3" />
-                      <h3 className="text-2xl font-bold text-ocean-primary">Level {level}</h3>
+                      <Trophy className="w-8 h-8 text-foreground mb-3" />
+                      <h3 className="text-2xl font-bold font-sans">Level {level}</h3>
                       <p className="text-sm font-medium text-muted-foreground mt-1">{getRankTitle(level)}</p>
                     </CardEnhancedContent>
                   </CardEnhanced>
@@ -789,13 +898,13 @@ const PromptRefinement = () => {
 
                 {/* XP Card */}
                 <div key="xp" className="h-full">
-                  <CardEnhanced variant="gold" className="text-center h-full flex flex-col relative group">
-                    <div className="drag-handle absolute top-2 right-2 cursor-move opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10 rounded">
+                  <CardEnhanced variant="outline" className="text-center h-full flex flex-col relative group">
+                    <div className="drag-handle absolute top-2 right-2 cursor-move opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded">
                       <GripVertical className="w-4 h-4 text-muted-foreground" />
                     </div>
                     <CardEnhancedContent className="p-3 flex flex-col items-center justify-center h-full">
-                      <Sparkles className="w-10 h-10 text-ocean-primary mb-3" />
-                      <h3 className="text-2xl font-bold text-ocean-primary">{xp}</h3>
+                      <Sparkles className="w-8 h-8 text-foreground mb-3" />
+                      <h3 className="text-2xl font-bold font-sans">{xp}</h3>
                       <p className="text-sm font-medium text-muted-foreground mt-1">Total XP Earned</p>
                     </CardEnhancedContent>
                   </CardEnhanced>
@@ -803,76 +912,117 @@ const PromptRefinement = () => {
 
                 {/* Streak Card */}
                 <div key="streak" className="h-full">
-                  <CardEnhanced variant="glass" className="text-center h-full flex flex-col relative group">
-                    <div className="drag-handle absolute top-2 right-2 cursor-move opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10 rounded">
+                  <CardEnhanced variant="outline" className="text-center h-full flex flex-col relative group">
+                    <div className="drag-handle absolute top-2 right-2 cursor-move opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded">
                       <GripVertical className="w-4 h-4 text-muted-foreground" />
                     </div>
                     <CardEnhancedContent className="p-3 flex flex-col items-center justify-center h-full">
-                      <Target className="w-10 h-10 text-gold-accent mb-3" />
-                      <h3 className="text-2xl font-bold text-ocean-primary">{streak}</h3>
-                      <p className="text-sm font-medium text-muted-foreground mt-1">Day Streak</p>
+                      <div className="text-3xl font-bold mb-2">🔥</div>
+                      <h3 className="text-2xl font-bold font-sans">{streak} Days</h3>
+                      <p className="text-sm font-medium text-muted-foreground mt-1">Current Streak</p>
                     </CardEnhancedContent>
                   </CardEnhanced>
                 </div>
 
                 {/* Daily Challenge */}
                 <div key="challenge" className="h-full">
-                  <CardEnhanced variant="ocean" className="h-full flex flex-col relative group">
-                    <div className="drag-handle absolute top-2 right-2 cursor-move opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10 rounded z-10">
+                  <CardEnhanced variant="accent" className="h-full flex flex-col relative group">
+                    <div className="drag-handle absolute top-2 right-2 cursor-move opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded">
                       <GripVertical className="w-4 h-4 text-muted-foreground" />
                     </div>
-                    <CardEnhancedHeader className="p-4 pb-2">
-                      <CardEnhancedTitle className="text-xl">🎯 Daily Challenge</CardEnhancedTitle>
-                      <CardEnhancedDescription className="text-sm mt-1">
-                        Today's task
-                      </CardEnhancedDescription>
-                    </CardEnhancedHeader>
-                    <CardEnhancedContent className="p-4 pt-1 flex flex-col flex-1 h-full min-h-0 pb-4 overflow-hidden">
-                      <div className="space-y-3 flex-1 min-h-0 overflow-y-auto pr-1">
-                        <p className="text-sm">
-                          <strong>Transform current prompt:</strong>
-                        </p>
-                        <div className="p-3 bg-muted rounded-md text-sm italic">
-                          "Make me something creative"
-                        </div>
-                        <div className="p-3 bg-muted rounded-md text-sm italic">
-                          "Make me something creative"
-                        </div>
+                    {dailyChallenges && dailyChallenges.length > 0 ? (
+                      <div className="flex flex-col h-full">
+                        <CardEnhancedHeader className="border-b border-neutral-200 dark:border-neutral-800 pb-4">
+                          <CardEnhancedTitle className="text-lg flex items-center gap-2 font-bold">
+                            <Target className="w-5 h-5 text-foreground" />
+                            Daily Challenges
+                          </CardEnhancedTitle>
+                          <CardEnhancedDescription className="text-muted-foreground mt-1">
+                            Complete challenges to earn XP
+                          </CardEnhancedDescription>
+                        </CardEnhancedHeader>
+                        <CardEnhancedContent className="pt-4 flex flex-col gap-4 flex-1 h-[300px] overflow-y-auto custom-scrollbar">
+                          <div className="space-y-4 pr-2">
+                            {dailyChallenges.map((challenge, index) => {
+                              const currentProg = challengeProgress[challenge.title] || 0;
+                              const progPercent = Math.min((currentProg / challenge.targetCount) * 100, 100);
+                              const isCompleted = currentProg >= challenge.targetCount;
+
+                              return (
+                                <div key={index} className="p-4 border border-neutral-200 dark:border-neutral-800 rounded-lg flex flex-col gap-3 hover:bg-neutral-50 dark:hover:bg-neutral-900/50 transition-colors">
+                                  <div className="flex justify-between items-start">
+                                    <div>
+                                      <h4 className="font-bold text-foreground flex items-center gap-2">
+                                        {challenge.title}
+                                        {challenge.isActive && <span className="bg-red-500 text-white dark:bg-red-500/50 text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1 font-bold shadow-sm animate-pulse-slow">🔥 Today's Hot</span>}
+                                      </h4>
+                                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{challenge.description}</p>
+                                    </div>
+                                    <Badge variant="outline" className="text-yellow-600 dark:text-yellow-400 border-yellow-200 dark:border-yellow-900 font-bold whitespace-nowrap ml-2 shrink-0">
+                                      +{challenge.rewardXp} XP
+                                    </Badge>
+                                  </div>
+                                  <div className="flex items-center justify-between gap-4">
+                                    <div className="flex-1">
+                                      <div className="flex items-center justify-between text-xs font-medium mb-1.5">
+                                        <span className="text-muted-foreground">Progress</span>
+                                        <span className="font-bold text-foreground">{currentProg}/{challenge.targetCount}</span>
+                                      </div>
+                                      <div className="w-full bg-neutral-200 dark:bg-neutral-800 rounded-full h-1.5">
+                                        <div className="bg-black dark:bg-white h-1.5 rounded-full transition-all" style={{ width: `${progPercent}%` }}></div>
+                                      </div>
+                                    </div>
+                                    <Button
+                                      size="sm"
+                                      onClick={() => handleAttemptChallenge(challenge)}
+                                      className="bg-black text-white hover:bg-neutral-800 dark:bg-white dark:text-black dark:hover:bg-neutral-200 shadow-none h-8 text-xs px-4"
+                                    >
+                                      {isCompleted ? "Review" : "Attempt"}
+                                    </Button>
+                                  </div>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </CardEnhancedContent>
                       </div>
-                      <Button variant="challenge" className="w-full mt-4 shrink-0 font-medium" onClick={() => toast.error("YOU ARE NOT YET READY SOLDIER!")}>
-                        Start (+50 XP)
-                      </Button>
-                    </CardEnhancedContent>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center h-full p-4 text-center">
+                        <Target className="w-8 h-8 text-muted-foreground mb-3 opacity-50" />
+                        <h3 className="font-bold">No Active Challenges</h3>
+                        <p className="text-sm text-muted-foreground mt-1">Check back later for new daily goals!</p>
+                      </div>
+                    )}
                   </CardEnhanced>
                 </div>
 
                 {/* Learning Modules */}
                 <div key="modules" className="h-full">
-                  <CardEnhanced variant="glass" className="h-full flex flex-col relative group">
-                    <div className="drag-handle absolute top-2 right-2 cursor-move opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10 rounded z-10">
+                  <CardEnhanced variant="outline" className="h-full flex flex-col relative group">
+                    <div className="drag-handle absolute top-2 right-2 cursor-move opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded">
                       <GripVertical className="w-4 h-4 text-muted-foreground" />
                     </div>
-                    <CardEnhancedHeader className="p-4 pb-2">
-                      <CardEnhancedTitle className="text-xl">📚 Modules</CardEnhancedTitle>
+                    <CardEnhancedHeader className="pb-4">
+                      <CardEnhancedTitle className="text-lg font-bold">Modules</CardEnhancedTitle>
                       <CardEnhancedDescription className="text-sm mt-1">
                         Mastery Path
                       </CardEnhancedDescription>
                     </CardEnhancedHeader>
-                    <CardEnhancedContent className="p-4 pt-1 flex-1 min-h-0 overflow-y-auto pr-1 pb-2">
+                    <CardEnhancedContent className="flex-1 overflow-y-auto space-y-3 pb-2 custom-scrollbar">
                       <div className="space-y-3">
-                        <div className="flex items-center justify-between p-3 bg-ocean-mist/20 rounded-md">
+                        <div className="flex items-center justify-between p-3 bg-neutral-100 dark:bg-green-800/50 rounded-md">
                           <span className="text-sm font-medium">Basics</span>
-                          <Badge className="text-xs px-2 py-0.5">Done</Badge>
+                          <Badge className="text-xs px-2 py-0.5 rounded-sm">Done</Badge>
                         </div>
-                        <div className="flex items-center justify-between p-3 bg-ocean-mist/20 rounded-md">
+                        <div className="flex items-center justify-between p-3 bg-ocean-mist/20 rounded-md dark:border dark:border-blue-500/70 dark:hover:border dark:hover:border-blue-500">
                           <span className="text-sm font-medium">Context</span>
                           <Badge variant="outline" className="text-xs px-2 py-0.5">Active</Badge>
                         </div>
-                        <div className="flex items-center justify-between p-3 bg-muted/50 rounded-md opacity-60">
+                        <div className="flex items-center justify-between p-3 bg-red-900/50 rounded-md opacity-70">
                           <span className="text-sm font-medium">Advanced</span>
                           <Badge variant="secondary" className="text-xs px-2 py-0.5">Locked</Badge>
                         </div>
-                        <div className="flex items-center justify-between p-3 bg-muted/50 rounded-md opacity-60">
+                        <div className="flex items-center justify-between p-3 bg-red-900/50 rounded-md opacity-60">
                           <span className="text-sm font-medium">Expert</span>
                           <Badge variant="secondary" className="text-xs px-2 py-0.5">Locked</Badge>
                         </div>
@@ -886,6 +1036,89 @@ const PromptRefinement = () => {
         </div>
       </div>
       <Footer />
+
+      {/* Challenge Attempt Modal */}
+      <Dialog open={isAttemptModalOpen} onOpenChange={setIsAttemptModalOpen}>
+        <DialogContent className="max-w-2xl bg-white dark:bg-[#1a1a1a] border-neutral-200 dark:border-neutral-800 p-6 max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl font-bold">
+              <Target className="w-5 h-5 text-foreground" />
+              Attempt: {attemptingChallenge?.title}
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground mt-2">
+              {attemptingChallenge?.description}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 mt-4">
+            <Textarea
+              placeholder="Write your prompt here to solve the challenge..."
+              value={challengeAttemptInput}
+              onChange={(e) => setChallengeAttemptInput(e.target.value)}
+              disabled={attemptingChallenge ? (challengeProgress[attemptingChallenge.title] || 0) >= attemptingChallenge.targetCount : false}
+              className="min-h-[150px] resize-none font-mono text-sm bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 shadow-none disabled:opacity-50"
+            />
+
+            <div className="flex justify-end">
+              <Button
+                onClick={handleSubmitChallengeAttempt}
+                disabled={isSubmittingAttempt || !challengeAttemptInput.trim() || (attemptingChallenge ? (challengeProgress[attemptingChallenge.title] || 0) >= attemptingChallenge.targetCount : false)}
+                className="bg-black text-white hover:bg-neutral-800 dark:bg-white dark:text-black dark:hover:bg-neutral-200 shadow-none"
+              >
+                {attemptingChallenge && (challengeProgress[attemptingChallenge.title] || 0) >= attemptingChallenge.targetCount ? "Limit Reached" : (
+                  isSubmittingAttempt ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      Evaluating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Submit for Evaluation
+                    </>
+                  )
+                )}
+              </Button>
+            </div>
+
+            {challengeEvaluation && (
+              <div className="mt-6 pt-6 border-t border-neutral-200 dark:border-neutral-800 space-y-4 animate-in fade-in zoom-in duration-300">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-3">
+                    <h4 className="font-bold text-lg text-foreground">Evaluation Results</h4>
+                    {challengeEvaluation.awardedXp > 0 && (
+                      <Badge variant="outline" className="text-yellow-600 dark:text-yellow-400 border-yellow-200 dark:border-yellow-900 font-bold bg-yellow-50 dark:bg-yellow-900/20">
+                        +{challengeEvaluation.awardedXp} XP Awarded
+                      </Badge>
+                    )}
+                  </div>
+                  <Badge variant={challengeEvaluation.score.includes("100") ? "default" : "secondary"} className="text-sm px-3 py-1">
+                    Score: {challengeEvaluation.score}
+                  </Badge>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="bg-neutral-50 dark:bg-neutral-900/50 p-4 rounded-lg border border-neutral-200 dark:border-neutral-800">
+                    <h5 className="font-semibold text-sm mb-2 flex items-center gap-2 text-foreground">
+                      <Wand2 className="w-4 h-4" />
+                      Suggestions for Improvement
+                    </h5>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">{challengeEvaluation.suggestions}</p>
+                  </div>
+
+                  <div className="bg-neutral-50 dark:bg-neutral-900/50 p-4 rounded-lg border border-neutral-200 dark:border-neutral-800">
+                    <h5 className="font-semibold text-sm mb-2 flex items-center gap-2 text-foreground">
+                      <Lock className="w-4 h-4" />
+                      Token Efficiency Tips
+                    </h5>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">{challengeEvaluation.tokenEfficiency}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div >
   );
 };

@@ -12,10 +12,11 @@ const buttonVariants = cva(
         default: "bg-primary text-primary-foreground hover:bg-primary/90",
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground dark:border-white",
-        custom1: "border border-input bg-background hover:bg-[#121212] dark:hover:bg-[#a15953] hover:text-accent-foreground",
+        custom1: "border border-input bg-background hover:bg-[#121212] dark:hover:bg-[#a15953] hover:text-white",
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         custom2: "dark:hover:border-white/60 dark:hover:border-2",
+        custom3: "dark:hover:border-red-700 dark:hover:border-b-[3px] hover:border-b-[3px] hover:border-red-700 hover:shadow-[0_-0.5px_15px_rgba(255,0,0,0.2)] dark:hover:shadow-[0_-0.5px_15px_rgba(255,0,0,0.2)]",
         link: "text-primary underline-offset-4 hover:underline",
         // Custom nautical variants
         ocean: "border dark:bg-[#121212] bg-gradient-ocean text-primary-foreground hover:shadow-ocean transition-all duration-300 transform hover:scale-105 dark:border-white dark:text-white",
