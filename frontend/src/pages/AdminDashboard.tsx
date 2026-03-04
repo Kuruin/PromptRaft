@@ -201,7 +201,7 @@ export default function AdminDashboard() {
                             </CardEnhanced>
 
                             {/* Challenges List */}
-                            <CardEnhanced variant="flat" className="h-[600px] flex flex-col">
+                            <CardEnhanced variant="custom1" className="h-[600px] flex flex-col">
                                 <CardEnhancedHeader>
                                     <CardEnhancedTitle>Manage Challenges</CardEnhancedTitle>
                                 </CardEnhancedHeader>
@@ -222,11 +222,11 @@ export default function AdminDashboard() {
                                                         <div>
                                                             <h3 className="font-bold flex items-center gap-2 text-foreground">
                                                                 {challenge.title}
-                                                                {challenge.isActive && <span className="bg-orange-600 text-white dark:bg-orange-500 text-xs px-2 py-0.5 rounded-full flex items-center gap-1 font-bold shadow-sm animate-pulse-slow">🔥 Today's Hot</span>}
+                                                                {challenge.isActive && <span className="bg-red-600 text-white dark:bg-red-500/50 text-xs px-2 py-0.5 rounded-full flex items-center gap-1 font-bold shadow-sm animate-pulse-slow">🔥 Today's Hot</span>}
                                                             </h3>
                                                             <p className="text-sm text-muted-foreground mt-1">{challenge.description}</p>
                                                         </div>
-                                                        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive shrink-0 -mt-1 -mr-1" onClick={() => handleDeleteChallenge(challenge._id)}>
+                                                        <Button variant="custom3" size="icon" className="text-muted-foreground hover:text-black dark:hover:text-white shrink-0 -mt-1 -mr-1" onClick={() => handleDeleteChallenge(challenge._id)}>
                                                             <Trash2 className="w-4 h-4" />
                                                         </Button>
                                                     </div>

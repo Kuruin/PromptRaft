@@ -11,6 +11,7 @@ const cardVariants = cva(
         accent: "border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900",
         outline: "border-neutral-300 dark:border-neutral-700 bg-transparent hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors",
         flat: "border-transparent bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors",
+        custom1: "border-transparent bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700/50 transition-colors",
       },
     },
     defaultVariants: {
