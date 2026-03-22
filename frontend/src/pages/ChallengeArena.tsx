@@ -82,7 +82,11 @@ export default function ChallengeArena() {
             fetchLeaderboard(activeChallenge._id); // Refresh rankings
 
             if (res.data.xpAwarded > 0) {
-                toast.success(`You earned ${res.data.xpAwarded} XP!`, { icon: <Zap className="w-4 h-4 text-yellow-500" /> });
+                if (res.data.streakInfo && res.data.streakInfo.streakBonus > 1.0) {
+                    toast.success(`You earned ${res.data.xpAwarded} XP! (${res.data.streakInfo.streakBonus}x Streak Bonus 🔥)`, { icon: <Zap className="w-4 h-4 text-yellow-500" /> });
+                } else {
+                    toast.success(`You earned ${res.data.xpAwarded} XP!`, { icon: <Zap className="w-4 h-4 text-yellow-500" /> });
+                }
                 refreshProfile(); // Update context user state
 
                 if (res.data.leveledUp) {
@@ -218,6 +222,11 @@ export default function ChallengeArena() {
                                         <div className="flex items-center gap-2 text-yellow-600 dark:text-yellow-500 font-bold bg-yellow-500/10 p-3 rounded-lg w-fit">
                                             <Trophy className="w-5 h-5" />
                                             Earned {result.xpAwarded} XP
+                                            {result.streakInfo?.streakBonus > 1.0 && (
+                                                <span className="ml-2 bg-orange-500/20 text-orange-500 text-xs px-2 py-1 rounded font-black tracking-widest border border-orange-500/20">
+                                                    {result.streakInfo.streakBonus}X 🔥
+                                                </span>
+                                            )}
                                         </div>
                                     )}
                                 </CardContent>

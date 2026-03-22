@@ -1,12 +1,12 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Sparkles, Swords } from "lucide-react";
+import { Sparkles, Swords, Flame } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 
 export default function Header() {
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, user } = useAuth();
   const navigate = useNavigate();
 
   return (
@@ -36,6 +36,19 @@ export default function Header() {
           <Link to="/create" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">
             Submit
           </Link>
+          {isAuthenticated && user && (
+            <div className="flex items-center gap-4 bg-muted/40 px-4 py-1.5 rounded-full border border-border/50 hidden md:flex">
+              <div title="Daily Streak" className="flex items-center gap-1.5">
+                <Flame className={`w-4 h-4 ${user.streak >= 7 ? 'text-orange-500 fill-orange-500 animate-pulse' : user.streak >= 3 ? 'text-yellow-500 fill-yellow-500' : 'text-muted-foreground'}`} />
+                <span className="text-sm font-bold text-foreground">{user.streak || 0}</span>
+              </div>
+              <div className="h-4 w-px bg-border"></div>
+              <div title="Your Level" className="flex items-center gap-1.5">
+                <span className="text-[10px] font-black tracking-widest uppercase text-muted-foreground">LVL</span>
+                <span className="text-sm font-bold text-primary">{user.level || 1}</span>
+              </div>
+            </div>
+          )}
           <ThemeToggle />
           {isAuthenticated ? (
             <Button variant="outline" onClick={logout}>

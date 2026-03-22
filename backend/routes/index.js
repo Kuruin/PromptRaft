@@ -5,7 +5,7 @@ const promptRouter = require('./prompt');
 const adminRouter = require('./admin');
 const { Challenge, User, ChallengeSubmission } = require('../db');
 const { authMiddleware } = require('../middleware');
-const { addXp } = require('../gamification');
+const { addXp, updateStreak } = require('../gamification');
 const { GoogleGenAI } = require("@google/genai");
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
@@ -122,14 +122,21 @@ router.post("/challenges/:id/submit", authMiddleware, async (req, res) => {
         let xpAwarded = 0;
         let leveledUp = false;
         let newLevel = null;
+        let finalXpGiven = 0;
+        let streakInfo = { newStreak: 0, streakBonus: 1.0, streakMaintained: false };
 
         if (score >= 70) {
-            xpAwarded = Math.floor((challenge.rewardXp || 100) * (score / 100)); // partial XP based on score
+            xpAwarded = Math.floor((challenge.rewardXp || 100) * (score / 100)); // partial base XP
             const user = await User.findById(req.userId);
             if (user) {
-                const xpResult = await addXp(user, xpAwarded);
+                // Calculate streak multipliers before granting XP
+                streakInfo = await updateStreak(user);
+
+                const xpResult = await addXp(user, xpAwarded, streakInfo.streakBonus);
                 leveledUp = xpResult.leveledUp;
                 newLevel = xpResult.level;
+                finalXpGiven = xpResult.finalAmount;
+
                 await user.save();
             }
         }
@@ -164,10 +171,10 @@ router.post("/challenges/:id/submit", authMiddleware, async (req, res) => {
         res.json({
             score,
             feedback,
-            xpAwarded,
+            xpAwarded: finalXpGiven,
             leveledUp,
             newLevel,
-            message: "Challenge evaluated"
+            streakInfo
         });
 
     } catch (e) {

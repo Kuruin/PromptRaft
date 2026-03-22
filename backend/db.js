@@ -42,6 +42,7 @@ const userSchema = new mongoose.Schema({
     level: { type: Number, default: 1 },
     streak: { type: Number, default: 0 },
     lastLoginDate: { type: Date, default: Date.now },
+    lastChallengeDate: { type: Date },
     isAdmin: { type: Boolean, default: false },
     isBlocked: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now }
