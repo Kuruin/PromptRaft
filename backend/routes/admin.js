@@ -6,8 +6,24 @@ const { adminMiddleware } = require('../middleware');
 // Create a new daily challenge
 router.post('/challenges', adminMiddleware, async (req, res) => {
     try {
-        const { title, description, targetCount, rewardXp, isActive, type } = req.body;
+        const { title, description, targetCount, rewardXp, isActive, type, durationDays, durationHours, durationMinutes } = req.body;
         const challengeType = type || 'daily';
+
+        // Calculate deadline if duration is provided
+        let deadline = undefined;
+        let msToAdd = 0;
+        if (durationDays && Number(durationDays) > 0) {
+            msToAdd += Number(durationDays) * 24 * 60 * 60 * 1000;
+        }
+        if (durationHours && Number(durationHours) > 0) {
+            msToAdd += Number(durationHours) * 60 * 60 * 1000;
+        }
+        if (durationMinutes && Number(durationMinutes) > 0) {
+            msToAdd += Number(durationMinutes) * 60 * 1000;
+        }
+        if (msToAdd > 0) {
+            deadline = new Date(Date.now() + msToAdd);
+        }
 
         // If this one is active, deactivate all others of the SAME TYPE first
         if (isActive) {
@@ -20,6 +36,7 @@ router.post('/challenges', adminMiddleware, async (req, res) => {
             targetCount: targetCount || 3,
             rewardXp: rewardXp || 100,
             type: challengeType,
+            deadline,
             isActive: isActive || false
         });
 

@@ -3,7 +3,7 @@ const router = express.Router();
 const userRouter = require('./user');
 const promptRouter = require('./prompt');
 const adminRouter = require('./admin');
-const { Challenge, User } = require('../db');
+const { Challenge, User, ChallengeSubmission } = require('../db');
 const { authMiddleware } = require('../middleware');
 const { addXp } = require('../gamification');
 const { GoogleGenAI } = require("@google/genai");
@@ -28,10 +28,49 @@ router.get("/challenges/daily", async (req, res) => {
 // Public route to get all weekly challenges
 router.get("/challenges/weekly", async (req, res) => {
     try {
-        const challenges = await Challenge.find({ type: 'weekly' }).sort({ createdAt: -1 });
+        let challenges = await Challenge.find({
+            type: 'weekly',
+            $or: [
+                { deadline: { $gt: new Date() } },
+                { deadline: { $exists: false } },
+                { deadline: null }
+            ]
+        }).sort({ createdAt: -1 });
+
+        // Auto-rotation logic: If no unexpired challenge is currently active, pick a random one
+        let activeChallenge = challenges.find(c => c.isActive);
+        if (!activeChallenge && challenges.length > 0) {
+            // Pick a random unexpired challenge
+            const randomIndex = Math.floor(Math.random() * challenges.length);
+            activeChallenge = challenges[randomIndex];
+
+            // Deactivate any previously active expired challenges and activate the new one
+            await Challenge.updateMany({ type: 'weekly', isActive: true }, { isActive: false });
+            await Challenge.findByIdAndUpdate(activeChallenge._id, { isActive: true });
+
+            // Update in-memory for the immediate response
+            activeChallenge.isActive = true;
+        }
+
         res.json({ challenges });
     } catch (e) {
         console.error(e);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
+// Public route to get leaderboard for a specific challenge
+router.get("/challenges/:id/leaderboard", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const leaderboard = await ChallengeSubmission.find({ challengeId: id })
+            .sort({ highestScore: -1, updatedAt: 1 }) // Highest score first, then earliest time
+            .limit(10)
+            .populate('userId', 'username firstName lastName level');
+
+        res.json({ leaderboard });
+    } catch (e) {
+        console.error("Leaderboard fetch error", e);
         res.status(500).json({ message: "Internal server error" });
     }
 });
@@ -93,6 +132,33 @@ router.post("/challenges/:id/submit", authMiddleware, async (req, res) => {
                 newLevel = xpResult.level;
                 await user.save();
             }
+        }
+
+        // Track submission high scores for Leaderboard
+        try {
+            const existingSubmission = await ChallengeSubmission.findOne({
+                userId: req.userId,
+                challengeId: challenge._id
+            });
+
+            if (existingSubmission) {
+                if (score > existingSubmission.highestScore) {
+                    existingSubmission.highestScore = score;
+                    existingSubmission.bestPrompt = prompt;
+                    existingSubmission.updatedAt = Date.now();
+                    await existingSubmission.save();
+                }
+            } else {
+                await ChallengeSubmission.create({
+                    userId: req.userId,
+                    challengeId: challenge._id,
+                    highestScore: score,
+                    bestPrompt: prompt
+                });
+            }
+        } catch (subErr) {
+            console.error("Failed to update challenge submission tracker:", subErr);
+            // Non-fatal, let the request finish
         }
 
         res.json({

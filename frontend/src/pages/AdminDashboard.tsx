@@ -15,6 +15,7 @@ interface Challenge {
     targetCount: number;
     rewardXp: number;
     type?: 'daily' | 'weekly';
+    deadline?: string;
     isActive: boolean;
     createdAt: string;
 }
@@ -50,8 +51,11 @@ export default function AdminDashboard() {
     // Form state
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
-    const [attemptsCount, setAttemptsCount] = useState(2);
+    const [attemptsCount, setAttemptsCount] = useState(3);
     const [rewardXp, setRewardXp] = useState(100);
+    const [durationDays, setDurationDays] = useState(7);
+    const [durationHours, setDurationHours] = useState(0);
+    const [durationMinutes, setDurationMinutes] = useState(0);
 
     const fetchChallenges = async () => {
         try {
@@ -120,13 +124,16 @@ export default function AdminDashboard() {
         try {
             const challengeType = activeTab === 'weeklyChallenges' ? 'weekly' : 'daily';
             await axios.post('http://localhost:3000/api/v1/admin/challenges', {
-                title, description, targetCount: attemptsCount, rewardXp, isActive: true, type: challengeType
+                title, description, targetCount: attemptsCount, rewardXp, isActive: true, type: challengeType, durationDays, durationHours, durationMinutes
             });
             toast.success("Challenge created and activated!");
             setTitle('');
             setDescription('');
-            setAttemptsCount(2);
+            setAttemptsCount(3);
             setRewardXp(100);
+            setDurationDays(7);
+            setDurationHours(0);
+            setDurationMinutes(0);
             fetchChallenges();
         } catch (e) {
             toast.error("Failed to create challenge");
@@ -276,7 +283,47 @@ export default function AdminDashboard() {
                                                     />
                                                 </div>
                                             )}
-                                            <div className={activeTab === 'weeklyChallenges' ? "col-[1_/_span_2]" : ""}>
+                                            {activeTab === 'weeklyChallenges' && (
+                                                <div className="grid grid-cols-3 gap-2">
+                                                    <div>
+                                                        <label className="block text-xs font-medium mb-1 text-center">Days</label>
+                                                        <input
+                                                            type="number"
+                                                            required
+                                                            min="0"
+                                                            max="30"
+                                                            className="w-full p-2 border rounded bg-background text-center text-sm"
+                                                            value={durationDays}
+                                                            onChange={e => setDurationDays(Number(e.target.value))}
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-xs font-medium mb-1 text-center">Hours</label>
+                                                        <input
+                                                            type="number"
+                                                            required
+                                                            min="0"
+                                                            max="23"
+                                                            className="w-full p-2 border rounded bg-background text-center text-sm"
+                                                            value={durationHours}
+                                                            onChange={e => setDurationHours(Number(e.target.value))}
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-xs font-medium mb-1 text-center">Mins</label>
+                                                        <input
+                                                            type="number"
+                                                            required
+                                                            min="0"
+                                                            max="59"
+                                                            className="w-full p-2 border rounded bg-background text-center text-sm"
+                                                            value={durationMinutes}
+                                                            onChange={e => setDurationMinutes(Number(e.target.value))}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )}
+                                            <div>
                                                 <label className="block text-sm font-medium mb-1">Reward XP</label>
                                                 <input
                                                     type="number"
@@ -330,6 +377,18 @@ export default function AdminDashboard() {
                                                         <div className="flex gap-4 text-sm font-medium">
                                                             {challenge.type === 'daily' && (
                                                                 <span className="flex items-center gap-1 text-muted-foreground"><Target className="w-3 h-3" /> {challenge.targetCount} Attempts</span>
+                                                            )}
+                                                            {challenge.type === 'weekly' && challenge.deadline && (
+                                                                <span className="flex items-center gap-1 text-red-500 font-bold tracking-wide">
+                                                                    ⏱ {(() => {
+                                                                        const diffMs = new Date(challenge.deadline).getTime() - Date.now();
+                                                                        if (diffMs <= 0) return 'Expired';
+                                                                        const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                                                                        const hrs = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                                                                        const mins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                                                                        return `${days}d ${hrs}h ${mins}m Left`;
+                                                                    })()}
+                                                                </span>
                                                             )}
                                                             <span className="text-foreground font-bold">✨ {challenge.rewardXp} XP</span>
                                                         </div>

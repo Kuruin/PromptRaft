@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2, Swords, Trophy, Target, Zap } from "lucide-react";
+import { Loader2, Swords, Trophy, Target, Zap, Star } from "lucide-react";
 import axios from "axios";
 import Header from "@/components/Header";
 
@@ -14,6 +14,7 @@ interface Challenge {
     description: string;
     targetCount: number;
     rewardXp: number;
+    deadline?: string;
     isActive: boolean;
 }
 
@@ -24,6 +25,20 @@ export default function ChallengeArena() {
     const [prompt, setPrompt] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [result, setResult] = useState<any>(null);
+    const [leaderboard, setLeaderboard] = useState<any[]>([]);
+    const [isLeaderboardLoading, setIsLeaderboardLoading] = useState(false);
+
+    const fetchLeaderboard = async (challengeId: string) => {
+        setIsLeaderboardLoading(true);
+        try {
+            const res = await axios.get(`http://localhost:3000/api/v1/challenges/${challengeId}/leaderboard`);
+            setLeaderboard(res.data.leaderboard || []);
+        } catch (err) {
+            console.error("Failed to fetch leaderboard");
+        } finally {
+            setIsLeaderboardLoading(false);
+        }
+    };
 
     useEffect(() => {
         // Fetch weekly challenges on load
@@ -35,6 +50,7 @@ export default function ChallengeArena() {
                     // Pick the active one, or fallback to first
                     const active = res.data.challenges.find((c: Challenge) => c.isActive) || res.data.challenges[0];
                     setActiveChallenge(active);
+                    fetchLeaderboard(active._id);
                 }
             } catch (err) {
                 toast.error("Failed to load weekly challenges");
@@ -63,6 +79,7 @@ export default function ChallengeArena() {
             });
 
             setResult(res.data);
+            fetchLeaderboard(activeChallenge._id); // Refresh rankings
 
             if (res.data.xpAwarded > 0) {
                 toast.success(`You earned ${res.data.xpAwarded} XP!`, { icon: <Zap className="w-4 h-4 text-yellow-500" /> });
@@ -120,6 +137,26 @@ export default function ChallengeArena() {
                     </div>
                 </div>
 
+                {challenges.length > 1 && (
+                    <div className="mb-8 flex overflow-x-auto pb-4 gap-3 scrollbar-none">
+                        {challenges.map(c => (
+                            <button
+                                key={c._id}
+                                onClick={() => {
+                                    setActiveChallenge(c);
+                                    fetchLeaderboard(c._id);
+                                    setResult(null);
+                                    setPrompt('');
+                                }}
+                                className={`px-5 py-2.5 rounded-full whitespace-nowrap text-sm font-bold transition-all border-2 flex items-center gap-2 outline-none ${activeChallenge?._id === c._id ? 'border-primary bg-primary text-primary-foreground shadow-md' : 'border-border bg-muted/20 hover:border-primary/50 text-muted-foreground hover:bg-background'}`}
+                            >
+                                {c.isActive && <Star className={`w-4 h-4 ${activeChallenge?._id === c._id ? 'text-yellow-400 fill-yellow-400' : 'text-yellow-500 fill-yellow-500'}`} />}
+                                {c.title}
+                            </button>
+                        ))}
+                    </div>
+                )}
+
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
                     {/* Active Challenge Info */}
@@ -141,6 +178,16 @@ export default function ChallengeArena() {
                                 <CardDescription className="text-base mt-2">
                                     {activeChallenge.description}
                                 </CardDescription>
+                                {activeChallenge.deadline && (
+                                    <div className="mt-3 bg-red-500/10 border border-red-500/20 rounded-md px-3 py-2 inline-flex items-center gap-2">
+                                        <p className="text-xs font-black uppercase tracking-widest text-red-500">EXPIRES</p>
+                                        <p className="text-sm font-bold text-red-400">
+                                            {new Date(activeChallenge.deadline).toLocaleString(undefined, {
+                                                month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
+                                            })}
+                                        </p>
+                                    </div>
+                                )}
                             </CardHeader>
                             <CardContent>
                                 <div className="p-4 bg-background/50 rounded-lg border border-border mt-4">
@@ -176,6 +223,45 @@ export default function ChallengeArena() {
                                 </CardContent>
                             </Card>
                         )}
+
+                        {/* Leaderboard Panel */}
+                        <Card className="border-border shadow-sm bg-background">
+                            <CardHeader className="pb-3 border-b flex flex-row items-center justify-between">
+                                <CardTitle className="flex items-center gap-2 text-lg">
+                                    <Trophy className="w-5 h-5 text-yellow-500" /> Top Engineers
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-0">
+                                {isLeaderboardLoading ? (
+                                    <div className="p-6 text-center text-muted-foreground animate-pulse">Loading rankings...</div>
+                                ) : leaderboard.length === 0 ? (
+                                    <div className="p-6 text-center text-muted-foreground">No submissions yet. Be the first!</div>
+                                ) : (
+                                    <div className="divide-y divide-border">
+                                        {leaderboard.map((entry, idx) => (
+                                            <div key={entry._id} className="p-4 flex items-center justify-between hover:bg-muted/50 transition-colors">
+                                                <div className="flex items-center gap-3">
+                                                    <span className={`font-black text-lg w-6 text-center ${idx === 0 ? 'text-yellow-500' : idx === 1 ? 'text-slate-400' : idx === 2 ? 'text-amber-700' : 'text-muted-foreground'}`}>
+                                                        #{idx + 1}
+                                                    </span>
+                                                    <div>
+                                                        <p className="font-bold text-sm leading-none flex items-center gap-2">
+                                                            {entry.userId?.firstName} {entry.userId?.lastName}
+                                                            <span className="bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded font-black tracking-widest">LVL {entry.userId?.level}</span>
+                                                        </p>
+                                                        <p className="text-xs text-muted-foreground mt-1 text-left">@{entry.userId?.username.split('@')[0]}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="font-black text-lg text-foreground">{entry.highestScore}</p>
+                                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Score</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
                     </div>
 
                     {/* User Input Area */}

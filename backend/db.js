@@ -71,8 +71,17 @@ const challengeSchema = new mongoose.Schema({
     targetCount: { type: Number, required: true, default: 3 },
     rewardXp: { type: Number, required: true, default: 100 },
     type: { type: String, enum: ['daily', 'weekly'], default: 'daily' },
+    deadline: { type: Date }, // Optional expiration timer
     isActive: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now }
+});
+
+const challengeSubmissionSchema = new mongoose.Schema({
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    challengeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Challenge', required: true },
+    highestScore: { type: Number, required: true, default: 0 },
+    bestPrompt: { type: String },
+    updatedAt: { type: Date, default: Date.now }
 });
 
 const settingsSchema = new mongoose.Schema({
@@ -83,6 +92,7 @@ const User = mongoose.model("User", userSchema);
 const Prompt = mongoose.model("Prompt", promptSchema);
 const PromptVersion = mongoose.model("PromptVersion", promptVersionSchema);
 const Challenge = mongoose.model("Challenge", challengeSchema);
+const ChallengeSubmission = mongoose.model("ChallengeSubmission", challengeSubmissionSchema);
 const Settings = mongoose.model("Settings", settingsSchema);
 
-module.exports = { connectDb, User, Prompt, PromptVersion, Challenge, Settings }
+module.exports = { connectDb, User, Prompt, PromptVersion, Challenge, ChallengeSubmission, Settings }
