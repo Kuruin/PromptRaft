@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Loader2, Swords, Trophy, Target, Zap, Star } from "lucide-react";
 import axios from "axios";
 import Header from "@/components/Header";
+import { useNavigate } from "react-router-dom";
 
 interface Challenge {
     _id: string;
@@ -27,6 +28,16 @@ export default function ChallengeArena() {
     const [result, setResult] = useState<any>(null);
     const [leaderboard, setLeaderboard] = useState<any[]>([]);
     const [isLeaderboardLoading, setIsLeaderboardLoading] = useState(false);
+    const [lastSubmittedPrompt, setLastSubmittedPrompt] = useState<string | null>(null);
+    const navigate = useNavigate();
+
+    // Prevent unauthenticated access
+    useEffect(() => {
+        if (!isAuthenticated) {
+            toast.error("Please login to enter the Arena!", { icon: <Swords className="w-4 h-4" /> });
+            navigate('/login');
+        }
+    }, [isAuthenticated, navigate]);
 
     const fetchLeaderboard = async (challengeId: string) => {
         setIsLeaderboardLoading(true);
@@ -64,9 +75,17 @@ export default function ChallengeArena() {
             toast.error("You must be logged in to participate");
             return;
         }
-        if (!activeChallenge) return;
-        if (prompt.trim().length === 0) {
+        if (!prompt.trim()) {
             toast.error("Prompt cannot be empty");
+            return;
+        }
+
+        if (!activeChallenge) {
+            return;
+        }
+
+        if (prompt.trim() === lastSubmittedPrompt) {
+            toast.error("You haven't changed your prompt since your last submission!", { icon: "🛑" });
             return;
         }
 
@@ -79,6 +98,7 @@ export default function ChallengeArena() {
             });
 
             setResult(res.data);
+            setLastSubmittedPrompt(prompt.trim());
             fetchLeaderboard(activeChallenge._id); // Refresh rankings
 
             if (res.data.xpAwarded > 0) {
@@ -151,6 +171,7 @@ export default function ChallengeArena() {
                                     fetchLeaderboard(c._id);
                                     setResult(null);
                                     setPrompt('');
+                                    setLastSubmittedPrompt(null);
                                 }}
                                 className={`px-5 py-2.5 rounded-full whitespace-nowrap text-sm font-bold transition-all border-2 flex items-center gap-2 outline-none ${activeChallenge?._id === c._id ? 'border-primary bg-primary text-primary-foreground shadow-md' : 'border-border bg-muted/20 hover:border-primary/50 text-muted-foreground hover:bg-background'}`}
                             >
