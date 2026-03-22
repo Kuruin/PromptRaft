@@ -11,47 +11,66 @@ const calculateLevel = (xp) => {
 };
 
 /**
- * Updates user streak based on last login date.
- * Should be called on every identifiable "active" day (e.g., login or first action of day).
+ * Updates user streak based on when they last completed a challenge.
+ * Call this ONLY when a user successfully completes a challenge.
  */
 const updateStreak = async (user) => {
     const now = new Date();
-    const last = new Date(user.lastLoginDate);
+    const last = user.lastChallengeDate ? new Date(user.lastChallengeDate) : null;
+    let streakMaintained = false;
+    let oldStreak = user.streak;
 
-    // Reset hours to compare calendar days only
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const lastDay = new Date(last.getFullYear(), last.getMonth(), last.getDate());
-
-    const diffTime = Math.abs(today - lastDay);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 0) {
-        // Same day, do nothing
-        return false;
-    } else if (diffDays === 1) {
-        // Consecutive day
-        user.streak += 1;
-    } else {
-        // Missed a day (or more), reset
+    if (!last) {
+        // First ever challenge
         user.streak = 1;
+        streakMaintained = true;
+    } else {
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const lastDay = new Date(last.getFullYear(), last.getMonth(), last.getDate());
+
+        const diffTime = Math.abs(today - lastDay);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 0) {
+            // Already did a challenge today, keep current streak
+            streakMaintained = true;
+        } else if (diffDays === 1) {
+            // Consecutive day
+            user.streak += 1;
+            streakMaintained = true;
+        } else {
+            // Missed a day
+            user.streak = 1;
+            streakMaintained = false;
+        }
     }
 
-    user.lastLoginDate = now;
-    // Note: We don't save here, caller must save
-    return true;
+    user.lastChallengeDate = now;
+
+    // Calculate Bonus Multiplier
+    let streakBonus = 1.0;
+    if (user.streak >= 7) streakBonus = 1.5;
+    else if (user.streak >= 3) streakBonus = 1.2;
+
+    return {
+        newStreak: user.streak,
+        streakMaintained: streakMaintained || oldStreak === 0,
+        streakBonus
+    };
 };
 
 /**
- * Adds XP to user and handles level up
+ * Adds XP to user and handles level up, considering streak multiplier
  */
-const addXp = async (user, amount) => {
-    user.xp += amount;
+const addXp = async (user, baseAmount, streakBonus = 1.0) => {
+    const finalAmount = Math.floor(baseAmount * streakBonus);
+    user.xp += finalAmount;
     const newLevel = calculateLevel(user.xp);
     if (newLevel > user.level) {
         user.level = newLevel;
-        return { leveledUp: true, level: newLevel };
+        return { leveledUp: true, level: newLevel, finalAmount };
     }
-    return { leveledUp: false, level: user.level };
+    return { leveledUp: false, level: user.level, finalAmount };
 };
 
 module.exports = {
