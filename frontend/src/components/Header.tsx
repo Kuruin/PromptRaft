@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Swords } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 
@@ -29,6 +29,9 @@ export default function Header() {
           </Link>
           <Link to="/prompt-refine" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">
             Prompt Refiner
+          </Link>
+          <Link to="/arena" className="text-sm font-medium text-primary hover:text-primary/80 transition-colors flex items-center gap-1">
+            <Swords className="w-4 h-4" /> Arena
           </Link>
           <Link to="/create" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">
             Submit

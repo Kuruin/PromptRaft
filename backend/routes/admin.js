@@ -6,11 +6,12 @@ const { adminMiddleware } = require('../middleware');
 // Create a new daily challenge
 router.post('/challenges', adminMiddleware, async (req, res) => {
     try {
-        const { title, description, targetCount, rewardXp, isActive } = req.body;
+        const { title, description, targetCount, rewardXp, isActive, type } = req.body;
+        const challengeType = type || 'daily';
 
-        // If this one is active, deactivate all others first
+        // If this one is active, deactivate all others of the SAME TYPE first
         if (isActive) {
-            await Challenge.updateMany({}, { isActive: false });
+            await Challenge.updateMany({ type: challengeType }, { isActive: false });
         }
 
         const challenge = await Challenge.create({
@@ -18,6 +19,7 @@ router.post('/challenges', adminMiddleware, async (req, res) => {
             description,
             targetCount: targetCount || 3,
             rewardXp: rewardXp || 100,
+            type: challengeType,
             isActive: isActive || false
         });
 
@@ -47,19 +49,22 @@ router.put('/challenges/:id/active', adminMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
 
-        // Deactivate all
-        await Challenge.updateMany({}, { isActive: false });
-
-        // Activate requested challenge
-        const challenge = await Challenge.findByIdAndUpdate(id, { isActive: true }, { new: true });
-
-        if (!challenge) {
+        // Find the challenge first to know its type
+        const targetChallenge = await Challenge.findById(id);
+        if (!targetChallenge) {
             return res.status(404).json({ message: "Challenge not found" });
         }
 
+        // Deactivate all of the same type
+        await Challenge.updateMany({ type: targetChallenge.type }, { isActive: false });
+
+        // Activate requested challenge
+        targetChallenge.isActive = true;
+        await targetChallenge.save();
+
         res.json({
             message: "Challenge set as active successfully",
-            challenge
+            challenge: targetChallenge
         });
     } catch (e) {
         console.error(e);

@@ -14,6 +14,7 @@ interface Challenge {
     description: string;
     targetCount: number;
     rewardXp: number;
+    type?: 'daily' | 'weekly';
     isActive: boolean;
     createdAt: string;
 }
@@ -36,7 +37,7 @@ export default function AdminDashboard() {
     const { user, isAuthenticated } = useAuth();
     const [challenges, setChallenges] = useState<Challenge[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('challenges');
+    const [activeTab, setActiveTab] = useState('dailyChallenges');
 
     // Users state
     const [usersList, setUsersList] = useState<UserData[]>([]);
@@ -117,8 +118,9 @@ export default function AdminDashboard() {
     const handleCreateChallenge = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
+            const challengeType = activeTab === 'weeklyChallenges' ? 'weekly' : 'daily';
             await axios.post('http://localhost:3000/api/v1/admin/challenges', {
-                title, description, targetCount: attemptsCount, rewardXp, isActive: true
+                title, description, targetCount: attemptsCount, rewardXp, isActive: true, type: challengeType
             });
             toast.success("Challenge created and activated!");
             setTitle('');
@@ -134,7 +136,7 @@ export default function AdminDashboard() {
     const handleSetActive = async (id: string) => {
         try {
             await axios.put(`http://localhost:3000/api/v1/admin/challenges/${id}/active`);
-            toast.success("Challenge marked as Today's Hot!");
+            toast.success("Challenge marked as active!");
             fetchChallenges();
         } catch (e) {
             toast.error("Failed to update challenge");
@@ -181,7 +183,8 @@ export default function AdminDashboard() {
     };
 
     const navItems = [
-        { id: 'challenges', label: 'Daily Challenges', icon: Target },
+        { id: 'dailyChallenges', label: 'Daily Challenges', icon: Target },
+        { id: 'weeklyChallenges', label: 'Weekly Challenges', icon: Target },
         { id: 'users', label: 'Manage Users', icon: Users },
         { id: 'settings', label: 'Platform Settings', icon: Settings },
     ];
@@ -221,19 +224,20 @@ export default function AdminDashboard() {
                             {navItems.find(n => n.id === activeTab)?.label}
                         </h1>
                         <p className="text-muted-foreground mt-2">
-                            {activeTab === 'challenges' && "Create and manage daily challenges for the learning grid."}
+                            {activeTab === 'dailyChallenges' && "Create and manage daily challenges for the Bento Grid."}
+                            {activeTab === 'weeklyChallenges' && "Create and manage weekly challenges for the Arena."}
                             {activeTab === 'users' && "View and moderate all registered users on PromptRaft."}
                             {activeTab === 'settings' && "Configure global application settings and theme defaults."}
                         </p>
                     </div>
 
                     {/* Active Tab Content */}
-                    {activeTab === 'challenges' && (
+                    {(activeTab === 'dailyChallenges' || activeTab === 'weeklyChallenges') && (
                         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 h-full">
                             {/* Create Challenge Form */}
                             <CardEnhanced variant="outline" className="h-[600px] flex flex-col">
                                 <CardEnhancedHeader>
-                                    <CardEnhancedTitle>Create Daily Challenge</CardEnhancedTitle>
+                                    <CardEnhancedTitle>Create {activeTab === 'weeklyChallenges' ? 'Weekly' : 'Daily'} Challenge</CardEnhancedTitle>
                                 </CardEnhancedHeader>
                                 <CardEnhancedContent className="flex-1 overflow-y-auto custom-scrollbar">
                                     <form onSubmit={handleCreateChallenge} className="space-y-4">
@@ -259,18 +263,20 @@ export default function AdminDashboard() {
                                             />
                                         </div>
                                         <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-sm font-medium mb-1">Attempts</label>
-                                                <input
-                                                    type="number"
-                                                    required
-                                                    min="1"
-                                                    className="w-full p-2 border rounded bg-background"
-                                                    value={attemptsCount}
-                                                    onChange={e => setAttemptsCount(Number(e.target.value))}
-                                                />
-                                            </div>
-                                            <div>
+                                            {activeTab === 'dailyChallenges' && (
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1">Attempts</label>
+                                                    <input
+                                                        type="number"
+                                                        required
+                                                        min="1"
+                                                        className="w-full p-2 border rounded bg-background"
+                                                        value={attemptsCount}
+                                                        onChange={e => setAttemptsCount(Number(e.target.value))}
+                                                    />
+                                                </div>
+                                            )}
+                                            <div className={activeTab === 'weeklyChallenges' ? "col-[1_/_span_2]" : ""}>
                                                 <label className="block text-sm font-medium mb-1">Reward XP</label>
                                                 <input
                                                     type="number"
@@ -300,19 +306,19 @@ export default function AdminDashboard() {
                                         <div className="flex-1 flex items-center justify-center">
                                             <p className="text-muted-foreground animate-pulse">Loading challenges...</p>
                                         </div>
-                                    ) : challenges.length === 0 ? (
+                                    ) : challenges.filter(c => activeTab === 'weeklyChallenges' ? c.type === 'weekly' : (c.type === 'daily' || !c.type)).length === 0 ? (
                                         <div className="flex-1 flex items-center justify-center">
                                             <p className="text-muted-foreground">No challenges created yet.</p>
                                         </div>
                                     ) : (
                                         <div className="flex-1 overflow-y-auto pr-2 space-y-4 custom-scrollbar">
-                                            {challenges.map(challenge => (
+                                            {challenges.filter(c => activeTab === 'weeklyChallenges' ? c.type === 'weekly' : (c.type === 'daily' || !c.type)).map(challenge => (
                                                 <div key={challenge._id} className={`p-4 border rounded-lg flex flex-col gap-3 transition-colors ${challenge.isActive ? 'border-neutral-800 dark:border-neutral-200 bg-neutral-100 dark:bg-neutral-800/50' : 'border-neutral-200 dark:border-neutral-800'}`}>
                                                     <div className="flex justify-between items-start">
                                                         <div>
                                                             <h3 className="font-bold flex items-center gap-2 text-foreground">
                                                                 {challenge.title}
-                                                                {challenge.isActive && <span className="bg-red-600 text-white dark:bg-red-500/50 text-xs px-2 py-0.5 rounded-full flex items-center gap-1 font-bold shadow-sm animate-pulse-slow">🔥 Today's Hot</span>}
+                                                                {challenge.isActive && <span className="bg-red-600 text-white dark:bg-red-500/50 text-xs px-2 py-0.5 rounded-full flex items-center gap-1 font-bold shadow-sm animate-pulse-slow">🔥 {activeTab === 'weeklyChallenges' ? 'Active Weekly' : 'Today\'s Hot'}</span>}
                                                             </h3>
                                                             <p className="text-sm text-muted-foreground mt-1">{challenge.description}</p>
                                                         </div>
@@ -322,12 +328,14 @@ export default function AdminDashboard() {
                                                     </div>
                                                     <div className="flex items-center justify-between mt-2 pt-2 border-t border-neutral-200 dark:border-neutral-800/50">
                                                         <div className="flex gap-4 text-sm font-medium">
-                                                            <span className="flex items-center gap-1 text-muted-foreground"><Target className="w-3 h-3" /> {challenge.targetCount} Attempts</span>
+                                                            {challenge.type === 'daily' && (
+                                                                <span className="flex items-center gap-1 text-muted-foreground"><Target className="w-3 h-3" /> {challenge.targetCount} Attempts</span>
+                                                            )}
                                                             <span className="text-foreground font-bold">✨ {challenge.rewardXp} XP</span>
                                                         </div>
                                                         {!challenge.isActive && (
                                                             <Button variant="outline" size="sm" onClick={() => handleSetActive(challenge._id)} className="border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-800">
-                                                                Set as Today's Hot
+                                                                Set as {activeTab === 'weeklyChallenges' ? 'Active Weekly' : 'Today\'s Hot'}
                                                             </Button>
                                                         )}
                                                     </div>

@@ -70,6 +70,7 @@ const challengeSchema = new mongoose.Schema({
     description: { type: String, required: true },
     targetCount: { type: Number, required: true, default: 3 },
     rewardXp: { type: Number, required: true, default: 100 },
+    type: { type: String, enum: ['daily', 'weekly'], default: 'daily' },
     isActive: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now }
 });
