@@ -237,4 +237,26 @@ router.post("/signin", async (req, res) => {
     }
 });
 
+// Search users by username
+router.get("/search", authMiddleware, async (req, res) => {
+    try {
+        const { q } = req.query;
+        if (!q || q.length < 2) {
+            return res.json({ users: [] });
+        }
+
+        const users = await User.find({
+            username: { $regex: q, $options: 'i' },
+            _id: { $ne: req.userId } // Exclude self
+        })
+            .select('username firstName lastName')
+            .limit(10);
+
+        res.json({ users });
+    } catch (e) {
+        console.error("Search Error:", e);
+        res.status(500).json({ error: "Failed to search users" });
+    }
+});
+
 module.exports = router;

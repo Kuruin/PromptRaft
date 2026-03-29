@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Helmet } from "react-helmet";
-import { Search, Copy, Share2, TrendingUp, Clock, Tag, MessageSquare, ThumbsUp, Sparkles, Plus, ExternalLink } from "lucide-react";
+import { Search, Copy, Share2, TrendingUp, Clock, Tag, MessageSquare, ThumbsUp, Sparkles, Plus, ExternalLink, Lock, Settings, X } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SiOpenai, SiAntdesign, SiGooglecloud } from "react-icons/si"; // We might need to install icons or use lucide substitutes
-import { Zap, Bot, Send } from "lucide-react";
+import { Zap, Bot, Send, Play } from "lucide-react";
 import {
     Tooltip,
     TooltipContent,
@@ -36,6 +36,12 @@ import {
 
 interface SharedPrompt {
     _id: string;
+    userId: string;
+    isPrivate: boolean;
+    promptType: string;
+    category: string;
+    imageUrl?: string;
+    contributors: { _id: string, username: string }[];
     title: string;
     description: string;
     content: string;
@@ -58,6 +64,8 @@ export default function PromptsGallery() {
     const [sortBy, setSortBy] = useState<"new" | "top">("top");
     const [selectedTag, setSelectedTag] = useState<string | null>(null);
     const [hoveredGeminiId, setHoveredGeminiId] = useState<string | null>(null);
+    const [showMineOnly, setShowMineOnly] = useState(false);
+    const [geminiPromptContent, setGeminiPromptContent] = useState<string | null>(null);
     const { user, isAuthenticated } = useAuth();
     const navigate = useNavigate();
 
@@ -68,8 +76,12 @@ export default function PromptsGallery() {
             if (search) params.append("search", search);
             if (sortBy) params.append("sort", sortBy);
             if (selectedTag) params.append("tag", selectedTag);
+            if (showMineOnly) params.append("mine", "true");
 
-            const res = await axios.get(`http://localhost:3000/api/v1/gallery?${params.toString()}`);
+            const token = localStorage.getItem("token");
+            const res = await axios.get(`http://localhost:3000/api/v1/gallery?${params.toString()}`, {
+                headers: token ? { Authorization: `Bearer ${token}` } : {}
+            });
             setPrompts(res.data.prompts);
         } catch (err) {
             toast.error("Failed to load prompts");
@@ -83,7 +95,7 @@ export default function PromptsGallery() {
             fetchPrompts();
         }, 300);
         return () => clearTimeout(timer);
-    }, [search, sortBy, selectedTag]);
+    }, [search, sortBy, selectedTag, showMineOnly]);
 
     const handleUpvote = async (id: string) => {
         if (!isAuthenticated) {
@@ -157,23 +169,35 @@ export default function PromptsGallery() {
                         />
                     </div>
 
-                    <div className="flex items-center gap-2 bg-muted/40 p-1.5 rounded-2xl border border-border/50">
-                        <Button
-                            variant={sortBy === 'top' ? 'secondary' : 'ghost'}
-                            size="sm"
-                            className="font-bold gap-2"
-                            onClick={() => setSortBy('top')}
-                        >
-                            <TrendingUp className="w-4 h-4" /> Top
-                        </Button>
-                        <Button
-                            variant={sortBy === 'new' ? 'secondary' : 'ghost'}
-                            size="sm"
-                            className="font-bold gap-2"
-                            onClick={() => setSortBy('new')}
-                        >
-                            <Clock className="w-4 h-4" /> Newest
-                        </Button>
+                    <div className="flex items-center gap-3">
+                        {isAuthenticated && (
+                            <Button
+                                variant={showMineOnly ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => setShowMineOnly(!showMineOnly)}
+                                className="font-bold border-primary/20 hover:border-primary/50 transition-all rounded-full px-5"
+                            >
+                                {showMineOnly ? "Showing My Prompts" : "My Prompts"}
+                            </Button>
+                        )}
+                        <div className="flex items-center gap-2 bg-muted/40 p-1.5 rounded-2xl border border-border/50">
+                            <Button
+                                variant={sortBy === 'top' ? 'secondary' : 'ghost'}
+                                size="sm"
+                                className="font-bold gap-2"
+                                onClick={() => setSortBy('top')}
+                            >
+                                <TrendingUp className="w-4 h-4" /> Top
+                            </Button>
+                            <Button
+                                variant={sortBy === 'new' ? 'secondary' : 'ghost'}
+                                size="sm"
+                                className="font-bold gap-2"
+                                onClick={() => setSortBy('new')}
+                            >
+                                <Clock className="w-4 h-4" /> Newest
+                            </Button>
+                        </div>
                     </div>
                 </div>
 
@@ -234,148 +258,152 @@ export default function PromptsGallery() {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {prompts.map(prompt => (
-                            <Card key={prompt._id} className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border-border/60 bg-card/40 backdrop-blur-md hover:border-primary/50 transition-all hover:shadow-2xl hover:shadow-primary/5">
-                                <CardHeader className="pb-4">
-                                    <div className="flex items-start justify-between mb-3">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary to-blue-500 flex items-center justify-center text-[10px] font-black text-white shadow-lg">
-                                                {prompt.author?.username?.[0]?.toUpperCase() || "?"}
-                                            </div>
-                                            <div className="flex flex-col leading-tight">
-                                                <span className="text-xs font-bold text-foreground hover:text-primary transition-colors cursor-pointer">
-                                                    @{prompt.author?.username || "anonymous"}
-                                                </span>
-                                                <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-black">
-                                                    LVL {prompt.author?.level || 1}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <Badge variant="outline" className="text-[10px] uppercase font-black border-primary/20 text-primary bg-primary/5 rounded-full">
-                                            {sortBy === 'top' && prompt.upvotesCount > 0 ? `${prompt.upvotesCount} Votes` : 'New'}
+                            <Card
+                                key={prompt._id}
+                                className="group bg-card border border-border hover:border-primary/40 transition-all duration-500 rounded-xl overflow-hidden flex flex-col h-full hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)] active:scale-[0.98]"
+                            >
+                                {/* Card header with optional image */}
+                                {prompt.imageUrl ? (
+                                    <div className="relative h-56 w-full overflow-hidden">
+                                        <img
+                                            src={prompt.imageUrl}
+                                            alt={prompt.title}
+                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/90 via-zinc-950/20 to-transparent" />
+                                        <Badge className="absolute top-4 right-4 bg-zinc-900/80 backdrop-blur-md border-zinc-700 text-[10px] font-black uppercase px-2 py-0.5 rounded-lg z-10">
+                                            {prompt.promptType || 'Image'}
                                         </Badge>
                                     </div>
-                                    <CardTitle className="text-xl font-bold leading-tight group-hover:text-primary transition-colors">
-                                        {prompt.title}
-                                    </CardTitle>
-                                    <CardDescription className="line-clamp-2 mt-2 leading-relaxed">
-                                        {prompt.description || "A community-crafted prompt for specialized AI interaction."}
-                                    </CardDescription>
-                                </CardHeader>
+                                ) : (
+                                    <div className="h-4 bg-transparent" />
+                                )}
 
-                                <CardContent>
-                                    <div className="relative">
-                                        <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                            <Button
-                                                size="icon"
-                                                variant="secondary"
-                                                className="h-8 w-8 shadow-lg"
-                                                onClick={() => copyToClipboard(prompt.content)}
-                                            >
-                                                <Copy className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                        <pre className="text-sm bg-muted/40 p-5 rounded-2xl border border-border/50 text-muted-foreground font-mono overflow-hidden h-32 relative">
-                                            {prompt.content}
-                                            <div className="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent pointer-events-none" />
-                                        </pre>
+                                <CardHeader className={`${prompt.imageUrl ? '-mt-16 relative z-10' : ''} px-6 pb-2`}>
+                                    <div className="flex items-start justify-between gap-4 mb-2">
+                                        <h3 className="text-xl font-black tracking-tight group-hover:text-primary transition-colors line-clamp-1 italic">
+                                            {prompt.title}
+                                        </h3>
+                                        <Badge variant="outline" className="text-[9px] uppercase font-black border-border text-muted-foreground bg-muted rounded-lg px-2 py-0.5 whitespace-nowrap">
+                                            {prompt.promptType}
+                                        </Badge>
                                     </div>
 
-                                    {prompt.tags?.length > 0 && (
-                                        <div className="flex flex-wrap gap-1.5 mt-4">
-                                            {prompt.tags.slice(0, 3).map(t => (
-                                                <span key={t} className="text-[10px] font-bold text-muted-foreground bg-muted/30 px-2 py-0.5 rounded border border-border/30">
-                                                    #{t}
-                                                </span>
-                                            ))}
+                                    <CardDescription className="line-clamp-2 mt-1 leading-relaxed text-muted-foreground font-medium text-xs">
+                                        {prompt.description || "A community-crafted prompt for specialized AI interaction."}
+                                    </CardDescription>
+
+                                    {/* Prompt Content Preview (Match Reference) */}
+                                    <div className="mt-5 bg-muted/30 border border-border rounded-md p-4 font-mono text-[11px] text-foreground overflow-hidden relative group/code shadow-inner h-28">
+                                        <div className="opacity-60 leading-relaxed whitespace-pre-wrap line-clamp-4">
+                                            {prompt.content}
                                         </div>
-                                    )}
-                                </CardContent>
+                                        <div className="absolute bottom-4 left-4 text-[10px] text-zinc-700 font-black italic">
+                                            ...
+                                        </div>
+                                    </div>
 
-                                <CardFooter className="pt-2 pb-6 border-t border-border/30 mt-auto flex items-center justify-between">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className={`px-4 font-black transition-all ${user && prompt.upvotes?.includes(user._id) ? 'bg-primary/10 text-primary hover:bg-primary/20' : 'text-muted-foreground hover:bg-muted'}`}
-                                        onClick={() => handleUpvote(prompt._id)}
-                                    >
-                                        <ThumbsUp className={`w-4 h-4 mr-2 ${user && prompt.upvotes?.includes(user._id) ? 'fill-primary' : ''}`} />
-                                        {prompt.upvotesCount}
-                                    </Button>
+                                    {/* Category & Tags Row */}
+                                    <div className="flex flex-wrap items-center gap-2 mt-4">
+                                        {prompt.category && prompt.category !== 'none' && (
+                                            <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 text-[9px] uppercase font-black px-2 py-0.5 rounded-lg border">
+                                                {prompt.category}
+                                            </Badge>
+                                        )}
+                                        {prompt.tags?.slice(0, 2).map(t => (
+                                            <span key={t} className="text-[9px] font-black text-muted-foreground bg-muted px-2 py-0.5 rounded-lg border border-border/40 uppercase tracking-tighter">
+                                                {t}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </CardHeader>
 
-                                    <div className="flex gap-2">
+                                <CardFooter className="pt-6 pb-6 mt-auto flex items-center justify-between px-6 border-t border-border">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-primary to-blue-500 flex items-center justify-center text-[9px] font-black text-white shadow-lg border border-white/10">
+                                            {prompt.author?.username?.[0]?.toUpperCase() || "?"}
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xs font-bold text-muted-foreground group-hover:text-primary transition-colors cursor-pointer">
+                                                @{prompt.author?.username || "anonymous"}
+                                            </span>
+                                            {prompt.contributors && prompt.contributors.length > 0 && (
+                                                <span className="text-[10px] font-black text-muted-foreground">
+                                                    +{prompt.contributors.length}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex items-center gap-1.5 group/vote cursor-pointer" onClick={() => handleUpvote(prompt._id)}>
+                                            <ThumbsUp className={`w-4 h-4 transition-all ${user && prompt.upvotes?.includes(user._id) ? 'text-primary fill-primary' : 'text-muted-foreground group-hover/vote:text-primary'}`} />
+                                            <span className={`text-xs font-black ${user && prompt.upvotes?.includes(user._id) ? 'text-primary' : 'text-muted-foreground group-hover/vote:text-primary'}`}>
+                                                {prompt.upvotesCount}
+                                            </span>
+                                        </div>
+
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                copyToClipboard(prompt.content);
+                                            }}
+                                            className="text-zinc-600 hover:text-primary transition-all active:scale-90"
+                                            title="Copy Prompt"
+                                        >
+                                            <Copy className="w-4 h-4" />
+                                        </button>
+
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="rounded-full font-bold border-border group-hover:border-primary/30 transition-all gap-2"
-                                                >
-                                                    <Send className="w-4 h-4 text-primary" /> Try it out
-                                                </Button>
+                                                <button className="text-muted-foreground hover:text-primary transition-all active:scale-90">
+                                                    <Play className="w-4 h-4" />
+                                                </button>
                                             </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end" className="w-56 rounded-xl border-border bg-card/95 backdrop-blur-xl">
-                                                <DropdownMenuLabel className="text-xs uppercase tracking-widest font-black text-muted-foreground p-3">Run with Agent</DropdownMenuLabel>
-                                                <DropdownMenuSeparator />
+                                            <DropdownMenuContent align="end" className="w-56 rounded-[1.5rem] border-border bg-popover/95 backdrop-blur-xl backdrop-blur-xl shadow-2xl p-2">
+                                                <DropdownMenuLabel className="text-[10px] uppercase tracking-[0.2em] font-black text-zinc-500 p-3">Run with Agent</DropdownMenuLabel>
+                                                <DropdownMenuSeparator className="bg-zinc-800/50" />
                                                 <DropdownMenuItem
-                                                    className="flex items-center gap-3 p-3 cursor-pointer focus:bg-primary/5 focus:text-primary rounded-lg transition-colors"
+                                                    className="flex items-center gap-3 p-3 cursor-pointer focus:bg-primary/10 focus:text-primary rounded-xl transition-colors"
                                                     onClick={() => {
                                                         copyToClipboard(prompt.content);
                                                         window.open(`https://chatgpt.com/?prompt=${encodeURIComponent(prompt.content)}`, "_blank");
                                                     }}
                                                 >
-                                                    <Zap className="w-4 h-4 text-green-500" /> ChatGPT
+                                                    <Zap className="w-4 h-4 text-emerald-500" /> <span className="font-bold text-xs capitalize">ChatGPT</span>
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem
-                                                    className="flex items-center gap-3 p-3 cursor-pointer focus:bg-primary/5 focus:text-primary rounded-lg transition-colors"
+                                                    className="flex items-center gap-3 p-3 cursor-pointer focus:bg-primary/10 focus:text-primary rounded-xl transition-colors"
                                                     onClick={() => {
                                                         copyToClipboard(prompt.content);
                                                         window.open(`https://claude.ai/new?q=${encodeURIComponent(prompt.content)}`, "_blank");
                                                     }}
                                                 >
-                                                    <Bot className="w-4 h-4 text-orange-400" /> Claude
+                                                    <Bot className="w-4 h-4 text-orange-400" /> <span className="font-bold text-xs capitalize">Claude</span>
                                                 </DropdownMenuItem>
-                                                <Popover open={hoveredGeminiId === prompt._id}>
-                                                    <PopoverTrigger asChild>
-                                                        <DropdownMenuItem
-                                                            className="flex items-center gap-3 p-3 cursor-pointer focus:bg-primary/5 focus:text-primary rounded-lg transition-colors group/item"
-                                                            onMouseEnter={() => setHoveredGeminiId(prompt._id)}
-                                                            onMouseLeave={() => setHoveredGeminiId(null)}
-                                                            onClick={(e) => {
-                                                                e.preventDefault();
-                                                                copyToClipboard(prompt.content);
-                                                            }}
-                                                        >
-                                                            <Sparkles className="w-4 h-4 text-blue-400" />
-                                                            <div className="flex flex-col">
-                                                                <span>Gemini</span>
-                                                                <span className="text-[10px] text-muted-foreground opacity-0 group-hover/item:opacity-100 transition-opacity font-bold">Try Gemini (Link)</span>
-                                                            </div>
-                                                        </DropdownMenuItem>
-                                                    </PopoverTrigger>
-                                                    <PopoverContent
-                                                        side="right"
-                                                        className="w-64 p-4 border border-border bg-card shadow-2xl rounded-2xl animate-in fade-in zoom-in duration-200"
-                                                        onMouseEnter={() => setHoveredGeminiId(prompt._id)}
-                                                        onMouseLeave={() => setHoveredGeminiId(null)}
-                                                    >
-                                                        <div className="space-y-3 text-left">
-                                                            <div className="flex items-center gap-2 text-primary font-black text-xs uppercase tracking-widest">
-                                                                <SiGooglecloud className="w-3 h-3" /> Quick Copy
-                                                            </div>
-                                                            <p className="text-sm text-foreground font-medium leading-relaxed">
-                                                                The prompt has been copied to your clipboard. Paste it in Gemini after opening.
-                                                            </p>
-                                                            <Button
-                                                                className="w-full h-10 font-bold bg-blue-500 hover:bg-blue-600 text-white shadow-lg shadow-blue-500/20"
-                                                                onClick={() => window.open(`https://gemini.google.com/app?q=${encodeURIComponent(prompt.content)}`, "_blank")}
-                                                            >
-                                                                Open Gemini <ExternalLink className="w-4 h-4 ml-2" />
-                                                            </Button>
-                                                        </div>
-                                                    </PopoverContent>
-                                                </Popover>
+                                                <DropdownMenuItem
+                                                    className="flex items-center gap-3 p-3 cursor-pointer focus:bg-primary/10 focus:text-primary rounded-xl transition-colors"
+                                                    onClick={() => {
+                                                        copyToClipboard(prompt.content);
+                                                        setGeminiPromptContent(prompt.content);
+                                                    }}
+                                                >
+                                                    <Sparkles className="w-4 h-4 text-blue-400" /> <span className="font-bold text-xs capitalize">Gemini</span>
+                                                </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
+
+                                        {user && (user._id === prompt.userId || (prompt.author && user.username === prompt.author.username)) && (
+                                            <button
+                                                className="text-muted-foreground hover:text-primary transition-all active:scale-90"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    navigate(`/create?id=${prompt._id}`);
+                                                }}
+                                            >
+                                                <Settings className="w-4 h-4" />
+                                            </button>
+                                        )}
                                     </div>
                                 </CardFooter>
                             </Card>
@@ -383,6 +411,45 @@ export default function PromptsGallery() {
                     </div>
                 )}
             </main>
+
+            {/* Gemini Confirmation Modal */}
+            {geminiPromptContent && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="w-full max-w-md bg-[#0f0f0f] border border-border rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+                        <div className="p-6">
+                            <div className="flex items-center justify-between mb-2">
+                                <h3 className="text-xl font-bold text-white tracking-tight">Prompt Copied</h3>
+                                <button
+                                    onClick={() => setGeminiPromptContent(null)}
+                                    className="text-zinc-500 hover:text-white transition-colors"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+                            <p className="text-zinc-400 text-sm leading-relaxed mb-8">
+                                The prompt has been copied to your clipboard. Paste it in Gemini after opening.
+                            </p>
+                            <div className="flex items-center justify-end gap-3">
+                                <button
+                                    onClick={() => setGeminiPromptContent(null)}
+                                    className="px-5 py-2.5 rounded-xl border border-border text-zinc-300 font-semibold text-sm hover:bg-zinc-800/50 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        window.open(`https://gemini.google.com/app?q=${encodeURIComponent(geminiPromptContent)}`, "_blank");
+                                        setGeminiPromptContent(null);
+                                    }}
+                                    className="px-5 py-2.5 rounded-xl bg-[#0070f3] hover:bg-[#0070f3]/90 text-white font-bold text-sm flex items-center gap-2 transition-colors"
+                                >
+                                    <ExternalLink className="w-4 h-4" /> Open Gemini
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <Footer />
         </div>

@@ -96,7 +96,16 @@ const sharedPromptSchema = new mongoose.Schema({
     content: { type: String, required: true },
     tags: [{ type: String }],
     upvotes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-    createdAt: { type: Date, default: Date.now }
+    isPrivate: { type: Boolean, default: false },
+    isPromptAgent: { type: Boolean, default: false },
+    requiresMedia: { type: Boolean, default: false },
+    promptType: { type: String, enum: ['text', 'code', 'system', 'structured', 'skill', 'taste'], default: 'text' },
+    structuredFormat: { type: String, enum: ['json', 'yaml', 'none'], default: 'none' },
+    category: { type: String, default: 'none' },
+    contributors: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    imageUrl: { type: String },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now }
 });
 
 const User = mongoose.model("User", userSchema);
