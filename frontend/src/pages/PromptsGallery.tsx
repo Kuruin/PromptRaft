@@ -62,12 +62,6 @@ export default function PromptsGallery() {
     const navigate = useNavigate();
 
     const fetchPrompts = async () => {
-        if (!search && !selectedTag) {
-            setPrompts([]);
-            setIsLoading(false);
-            return;
-        }
-
         setIsLoading(true);
         try {
             const params = new URLSearchParams();
@@ -157,17 +151,17 @@ export default function PromptsGallery() {
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
                         <Input
                             placeholder="Search prompts (e.g. 'coding assistant', 'creative writing')..."
-                            className="pl-11 h-12 bg-card/50 border-border rounded-xl focus-visible:ring-primary/20 transition-all text-lg"
+                            className="pl-11 h-12 bg-card/50 border-border rounded-2xl focus-visible:ring-primary/20 transition-all text-lg"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                         />
                     </div>
 
-                    <div className="flex items-center gap-2 bg-muted/40 p-1.5 rounded-xl border border-border/50">
+                    <div className="flex items-center gap-2 bg-muted/40 p-1.5 rounded-2xl border border-border/50">
                         <Button
                             variant={sortBy === 'top' ? 'secondary' : 'ghost'}
                             size="sm"
-                            className="rounded-lg font-bold gap-2"
+                            className="font-bold gap-2"
                             onClick={() => setSortBy('top')}
                         >
                             <TrendingUp className="w-4 h-4" /> Top
@@ -175,7 +169,7 @@ export default function PromptsGallery() {
                         <Button
                             variant={sortBy === 'new' ? 'secondary' : 'ghost'}
                             size="sm"
-                            className="rounded-lg font-bold gap-2"
+                            className="font-bold gap-2"
                             onClick={() => setSortBy('new')}
                         >
                             <Clock className="w-4 h-4" /> Newest
@@ -222,32 +216,25 @@ export default function PromptsGallery() {
                         ))}
                     </div>
                 ) : prompts.length === 0 ? (
-                    <div className="text-center py-32 bg-muted/10 rounded-3xl border-2 border-dashed border-border/50">
-                        <Search className="w-16 h-16 text-muted-foreground mx-auto mb-6 opacity-20" />
-                        <h3 className="text-3xl font-black text-foreground">Discover <span className="text-primary italic">Prompts</span></h3>
+                    <div className="text-center py-32 bg-muted/10 rounded-[2rem] border-2 border-dashed border-border/50">
+                        <MessageSquare className="w-16 h-16 text-muted-foreground mx-auto mb-6 opacity-20" />
+                        <h3 className="text-3xl font-black text-foreground">The Gallery is <span className="text-primary italic">Quiet</span></h3>
                         <p className="text-muted-foreground mt-3 max-w-sm mx-auto text-lg">
-                            Search for a topic or keyword to explore our community-driven prompt library.
+                            No prompts matched your search, or the community hasn't shared anything yet.
                         </p>
                         <div className="flex justify-center gap-4 mt-8">
                             <Button
-                                variant="outline"
-                                className="font-bold rounded-xl px-8 h-12"
-                                onClick={() => setSearch("coding")}
-                            >
-                                Try "coding"
-                            </Button>
-                            <Button
-                                className="font-bold rounded-xl px-8 h-12"
+                                className="font-bold px-8 h-12"
                                 onClick={() => navigate("/create")}
                             >
-                                <Plus className="w-4 h-4 mr-2" /> Share Your Own
+                                <Plus className="w-4 h-4 mr-2" /> Share the First Prompt
                             </Button>
                         </div>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {prompts.map(prompt => (
-                            <Card key={prompt._id} className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border-border/60 bg-card/40 backdrop-blur-md hover:border-primary/50 transition-all hover:shadow-2xl hover:shadow-primary/5">
+                            <Card key={prompt._id} className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border-border/60 bg-card/40 backdrop-blur-md hover:border-primary/50 transition-all hover:shadow-2xl hover:shadow-primary/5">
                                 <CardHeader className="pb-4">
                                     <div className="flex items-start justify-between mb-3">
                                         <div className="flex items-center gap-2">
@@ -263,7 +250,7 @@ export default function PromptsGallery() {
                                                 </span>
                                             </div>
                                         </div>
-                                        <Badge variant="outline" className="text-[10px] uppercase font-black border-primary/20 text-primary bg-primary/5">
+                                        <Badge variant="outline" className="text-[10px] uppercase font-black border-primary/20 text-primary bg-primary/5 rounded-full">
                                             {sortBy === 'top' && prompt.upvotesCount > 0 ? `${prompt.upvotesCount} Votes` : 'New'}
                                         </Badge>
                                     </div>
@@ -281,13 +268,13 @@ export default function PromptsGallery() {
                                             <Button
                                                 size="icon"
                                                 variant="secondary"
-                                                className="h-8 w-8 rounded-lg shadow-lg"
+                                                className="h-8 w-8 shadow-lg"
                                                 onClick={() => copyToClipboard(prompt.content)}
                                             >
                                                 <Copy className="h-4 w-4" />
                                             </Button>
                                         </div>
-                                        <pre className="text-sm bg-muted/40 p-5 rounded-xl border border-border/50 text-muted-foreground font-mono overflow-hidden h-32 relative">
+                                        <pre className="text-sm bg-muted/40 p-5 rounded-2xl border border-border/50 text-muted-foreground font-mono overflow-hidden h-32 relative">
                                             {prompt.content}
                                             <div className="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent pointer-events-none" />
                                         </pre>
@@ -308,7 +295,7 @@ export default function PromptsGallery() {
                                     <Button
                                         variant="ghost"
                                         size="sm"
-                                        className={`rounded-xl px-4 font-black transition-all ${user && prompt.upvotes?.includes(user._id) ? 'bg-primary/10 text-primary hover:bg-primary/20' : 'text-muted-foreground hover:bg-muted'}`}
+                                        className={`px-4 font-black transition-all ${user && prompt.upvotes?.includes(user._id) ? 'bg-primary/10 text-primary hover:bg-primary/20' : 'text-muted-foreground hover:bg-muted'}`}
                                         onClick={() => handleUpvote(prompt._id)}
                                     >
                                         <ThumbsUp className={`w-4 h-4 mr-2 ${user && prompt.upvotes?.includes(user._id) ? 'fill-primary' : ''}`} />
@@ -321,7 +308,7 @@ export default function PromptsGallery() {
                                                 <Button
                                                     variant="outline"
                                                     size="sm"
-                                                    className="rounded-xl font-bold border-border group-hover:border-primary/30 transition-all gap-2"
+                                                    className="rounded-full font-bold border-border group-hover:border-primary/30 transition-all gap-2"
                                                 >
                                                     <Send className="w-4 h-4 text-primary" /> Try it out
                                                 </Button>
@@ -379,7 +366,7 @@ export default function PromptsGallery() {
                                                                 The prompt has been copied to your clipboard. Paste it in Gemini after opening.
                                                             </p>
                                                             <Button
-                                                                className="w-full h-10 rounded-xl font-bold bg-blue-500 hover:bg-blue-600 text-white shadow-lg shadow-blue-500/20"
+                                                                className="w-full h-10 font-bold bg-blue-500 hover:bg-blue-600 text-white shadow-lg shadow-blue-500/20"
                                                                 onClick={() => window.open(`https://gemini.google.com/app?q=${encodeURIComponent(prompt.content)}`, "_blank")}
                                                             >
                                                                 Open Gemini <ExternalLink className="w-4 h-4 ml-2" />

@@ -108,14 +108,14 @@ export default function CreatePrompt() {
                     {/* Header Row */}
                     <div className="flex items-center justify-between mb-8">
                         <h1 className="text-2xl font-black tracking-tight flex items-center gap-3">
-                            <span className="bg-primary/20 p-2 rounded-xl border border-primary/30">
+                            <span className="bg-primary/20 p-2 rounded-2xl border border-primary/30">
                                 <Plus className="w-5 h-5 text-primary" />
                             </span>
                             Create Prompt
                         </h1>
                         <div className="flex items-center gap-6">
                             <div className="flex items-center gap-2">
-                                <Button variant="outline" size="sm" className="h-8 rounded-lg border-zinc-800 bg-zinc-900/50 hover:bg-zinc-800 gap-2 text-xs font-bold transition-all">
+                                <Button variant="outline" size="sm" className="h-8 border-zinc-800 bg-zinc-900/50 hover:bg-zinc-800 gap-2 text-xs font-bold transition-all">
                                     <Code className="w-3.5 h-3.5" /> Prompt Agent
                                 </Button>
                                 <Switch
@@ -136,9 +136,9 @@ export default function CreatePrompt() {
                     </div>
 
                     {/* Banner */}
-                    <div className="bg-zinc-900/40 border border-zinc-800/60 rounded-xl p-3 mb-10 flex items-center justify-between group cursor-pointer hover:bg-zinc-900/60 transition-all">
+                    <div className="bg-zinc-900/40 border border-zinc-800/60 rounded-2xl p-3 mb-10 flex items-center justify-between group cursor-pointer hover:bg-zinc-900/60 transition-all">
                         <div className="flex items-center gap-3">
-                            <div className="p-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                            <div className="p-1.5 rounded-xl bg-blue-500/10 border border-blue-500/20">
                                 <BookOpen className="w-4 h-4 text-blue-400" />
                             </div>
                             <span className="text-sm font-medium text-zinc-300">Learn how to write effective prompts →</span>
@@ -157,7 +157,7 @@ export default function CreatePrompt() {
                                     placeholder="Enter a title for your prompt"
                                     value={title}
                                     onChange={(e) => setTitle(e.target.value)}
-                                    className="h-12 bg-zinc-900/30 border-zinc-800/80 rounded-xl focus-visible:ring-primary/20 placeholder:text-zinc-600 font-medium"
+                                    className="h-12 bg-zinc-900/30 border-zinc-800/80 rounded-2xl focus-visible:ring-primary/20 placeholder:text-zinc-600 font-medium"
                                 />
                             </div>
                             <div className="space-y-2.5">
@@ -165,10 +165,10 @@ export default function CreatePrompt() {
                                     Category <Settings className="w-3 h-3 text-primary/40" />
                                 </Label>
                                 <Select value={category} onValueChange={setCategory}>
-                                    <SelectTrigger className="h-12 bg-zinc-900/30 border-zinc-800/80 rounded-xl focus:ring-primary/20 font-medium capitalize">
+                                    <SelectTrigger className="h-12 bg-zinc-900/30 border-zinc-800/80 rounded-2xl focus:ring-primary/20 font-medium capitalize">
                                         <SelectValue placeholder="None" />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-zinc-900 border-zinc-800 text-zinc-100 rounded-xl shadow-2xl">
+                                    <SelectContent className="bg-zinc-900 border-zinc-800 text-zinc-100 rounded-2xl shadow-2xl">
                                         <SelectItem value="none">None</SelectItem>
                                         <SelectItem value="coding">Coding</SelectItem>
                                         <SelectItem value="creative">Creative</SelectItem>
@@ -188,7 +188,7 @@ export default function CreatePrompt() {
                                 placeholder="Optional description of your prompt"
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
-                                className="min-h-[100px] bg-zinc-900/30 border-zinc-800/80 rounded-xl focus-visible:ring-primary/20 placeholder:text-zinc-600 resize-none"
+                                className="min-h-[100px] bg-zinc-900/30 border-zinc-800/80 rounded-2xl focus-visible:ring-primary/20 placeholder:text-zinc-600 resize-none"
                             />
                         </div>
 
@@ -203,7 +203,7 @@ export default function CreatePrompt() {
                                     placeholder="Search tags..."
                                     value={tags}
                                     onChange={(e) => setTags(e.target.value)}
-                                    className="pl-10 h-12 bg-zinc-900/30 border-zinc-800/80 rounded-xl focus-visible:ring-primary/20 placeholder:text-zinc-600"
+                                    className="pl-10 h-12 bg-zinc-900/30 border-zinc-800/80 rounded-2xl focus-visible:ring-primary/20 placeholder:text-zinc-600"
                                 />
                             </div>
                         </div>
@@ -220,7 +220,7 @@ export default function CreatePrompt() {
                                     placeholder="Search by username..."
                                     value={contributors}
                                     onChange={(e) => setContributors(e.target.value)}
-                                    className="pl-10 h-12 bg-zinc-900/30 border-zinc-800/80 rounded-xl focus-visible:ring-primary/20 placeholder:text-zinc-600"
+                                    className="pl-10 h-12 bg-zinc-900/30 border-zinc-800/80 rounded-2xl focus-visible:ring-primary/20 placeholder:text-zinc-600"
                                 />
                             </div>
                         </div>
@@ -267,10 +267,10 @@ export default function CreatePrompt() {
                                 </div>
                             </div>
 
-                            <div className="border border-zinc-800/80 rounded-2xl bg-zinc-900/20 overflow-hidden shadow-2xl">
+                            <div className="border border-zinc-800/80 rounded-[2.5rem] bg-zinc-900/20 overflow-hidden shadow-2xl">
                                 <div className="bg-zinc-900/50 p-4 border-b border-zinc-800/80 flex items-center gap-4">
                                     <button type="button" className="flex items-center gap-2 text-[11px] font-black uppercase text-zinc-400 hover:text-primary transition-colors">
-                                        <span className="bg-zinc-800 p-1 rounded-md text-[10px] text-zinc-500 font-bold tracking-tighter">( * )</span> Inset Variable
+                                        <span className="bg-zinc-800 p-1 rounded-lg text-[10px] text-zinc-500 font-bold tracking-tighter">( * )</span> Inset Variable
                                     </button>
                                     <span className="text-[10px] text-zinc-600 font-medium">Use ${"{name}"} or ${"{name:default}"} syntax</span>
                                 </div>
@@ -297,7 +297,7 @@ export default function CreatePrompt() {
                             <Button
                                 type="submit"
                                 disabled={isSubmitting}
-                                className="w-full max-w-sm h-14 rounded-2xl font-black uppercase tracking-[0.2em] text-sm bg-primary hover:bg-primary/90 shadow-2xl shadow-primary/20 transition-all active:scale-[0.98]"
+                                className="w-full max-w-sm h-14 font-black uppercase tracking-[0.2em] text-sm bg-primary hover:bg-primary/90 shadow-2xl shadow-primary/20 transition-all active:scale-[0.98]"
                             >
                                 {isSubmitting ? "Publishing RAFT..." : "Publish to Gallery"}
                             </Button>
