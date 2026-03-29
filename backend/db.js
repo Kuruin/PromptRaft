@@ -89,11 +89,22 @@ const settingsSchema = new mongoose.Schema({
     isMaintenanceMode: { type: Boolean, default: false }
 });
 
+const sharedPromptSchema = new mongoose.Schema({
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    title: { type: String, required: true },
+    description: { type: String },
+    content: { type: String, required: true },
+    tags: [{ type: String }],
+    upvotes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    createdAt: { type: Date, default: Date.now }
+});
+
 const User = mongoose.model("User", userSchema);
 const Prompt = mongoose.model("Prompt", promptSchema);
 const PromptVersion = mongoose.model("PromptVersion", promptVersionSchema);
 const Challenge = mongoose.model("Challenge", challengeSchema);
 const ChallengeSubmission = mongoose.model("ChallengeSubmission", challengeSubmissionSchema);
 const Settings = mongoose.model("Settings", settingsSchema);
+const SharedPrompt = mongoose.model("SharedPrompt", sharedPromptSchema);
 
-module.exports = { connectDb, User, Prompt, PromptVersion, Challenge, ChallengeSubmission, Settings }
+module.exports = { connectDb, User, Prompt, PromptVersion, Challenge, ChallengeSubmission, Settings, SharedPrompt }

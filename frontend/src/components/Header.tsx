@@ -30,6 +30,9 @@ export default function Header() {
           <Link to="/prompt-refine" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">
             Prompt Refiner
           </Link>
+          <Link to="/prompts" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">
+            Gallery
+          </Link>
           <Link to="/arena" className="text-sm font-medium text-primary hover:text-primary/80 transition-colors flex items-center gap-1">
             <Swords className="w-4 h-4" /> Arena
           </Link>
