@@ -151,6 +151,7 @@ router.post("/", authMiddleware, async (req, res) => {
             category,
             contributors,
             imageUrl,
+            structuredFormat,
         } = req.body;
 
         if (!title || !content) {
@@ -207,6 +208,7 @@ router.put("/:id", authMiddleware, async (req, res) => {
             category,
             contributors,
             imageUrl,
+            structuredFormat,
         } = req.body;
 
         const updatedPrompt = await SharedPrompt.findByIdAndUpdate(

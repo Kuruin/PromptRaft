@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Helmet } from "react-helmet";
-import { Search, Copy, Share2, TrendingUp, Clock, Tag, MessageSquare, ThumbsUp, Sparkles, Plus, ExternalLink, Lock, Settings, X } from "lucide-react";
+import { Search, Copy, Share2, TrendingUp, Clock, Tag, MessageSquare, ThumbsUp, Sparkles, Plus, ExternalLink, Lock, Settings, X, ImageIcon } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -33,11 +33,19 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 
 interface SharedPrompt {
     _id: string;
     userId: string;
     isPrivate: boolean;
+    requiresMedia?: boolean;
     promptType: string;
     category: string;
     imageUrl?: string;
@@ -66,6 +74,8 @@ export default function PromptsGallery() {
     const [hoveredGeminiId, setHoveredGeminiId] = useState<string | null>(null);
     const [showMineOnly, setShowMineOnly] = useState(false);
     const [geminiPromptContent, setGeminiPromptContent] = useState<string | null>(null);
+    const [mediaAlertPrompt, setMediaAlertPrompt] = useState<SharedPrompt | null>(null);
+    const [pendingAgentUrl, setPendingAgentUrl] = useState<string | null>(null);
     const { user, isAuthenticated } = useAuth();
     const navigate = useNavigate();
 
@@ -122,9 +132,33 @@ export default function PromptsGallery() {
         }
     };
 
-    const copyToClipboard = (text: string) => {
+    const copyToClipboard = (text: string, requiresMedia: boolean = false) => {
         navigator.clipboard.writeText(text);
-        toast.success("Prompt copied to clipboard!");
+        if (requiresMedia) {
+            toast.success("Copied! 📸 Remember to attach media when using this prompt.");
+        } else {
+            toast.success("Prompt copied to clipboard!");
+        }
+    };
+
+    const executeRunAgent = (prompt: SharedPrompt, agent: string) => {
+        copyToClipboard(prompt.content, prompt.requiresMedia);
+        if (agent === "chatgpt") {
+            window.open(`https://chatgpt.com/?prompt=${encodeURIComponent(prompt.content)}`, "_blank");
+        } else if (agent === "claude") {
+            window.open(`https://claude.ai/new?q=${encodeURIComponent(prompt.content)}`, "_blank");
+        } else if (agent === "gemini") {
+            setGeminiPromptContent(prompt.content);
+        }
+    };
+
+    const handleRunAgent = (prompt: SharedPrompt, agent: string) => {
+        if (prompt.requiresMedia) {
+            setMediaAlertPrompt(prompt);
+            setPendingAgentUrl(agent);
+        } else {
+            executeRunAgent(prompt, agent);
+        }
     };
 
     const tryInRefiner = (content: string) => {
@@ -346,7 +380,7 @@ export default function PromptsGallery() {
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                copyToClipboard(prompt.content);
+                                                copyToClipboard(prompt.content, prompt.requiresMedia);
                                             }}
                                             className="text-zinc-600 hover:text-primary transition-all active:scale-90"
                                             title="Copy Prompt"
@@ -360,33 +394,24 @@ export default function PromptsGallery() {
                                                     <Play className="w-4 h-4" />
                                                 </button>
                                             </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end" className="w-56 rounded-[1.5rem] border-border bg-popover/95 backdrop-blur-xl backdrop-blur-xl shadow-2xl p-2">
+                                            <DropdownMenuContent align="end" className="w-56 rounded-[1.5rem] border-border bg-popover/95 backdrop-blur-xl shadow-2xl p-2">
                                                 <DropdownMenuLabel className="text-[10px] uppercase tracking-[0.2em] font-black text-zinc-500 p-3">Run with Agent</DropdownMenuLabel>
                                                 <DropdownMenuSeparator className="bg-zinc-800/50" />
                                                 <DropdownMenuItem
                                                     className="flex items-center gap-3 p-3 cursor-pointer focus:bg-primary/10 focus:text-primary rounded-xl transition-colors"
-                                                    onClick={() => {
-                                                        copyToClipboard(prompt.content);
-                                                        window.open(`https://chatgpt.com/?prompt=${encodeURIComponent(prompt.content)}`, "_blank");
-                                                    }}
+                                                    onClick={() => handleRunAgent(prompt, "chatgpt")}
                                                 >
                                                     <Zap className="w-4 h-4 text-emerald-500" /> <span className="font-bold text-xs capitalize">ChatGPT</span>
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem
                                                     className="flex items-center gap-3 p-3 cursor-pointer focus:bg-primary/10 focus:text-primary rounded-xl transition-colors"
-                                                    onClick={() => {
-                                                        copyToClipboard(prompt.content);
-                                                        window.open(`https://claude.ai/new?q=${encodeURIComponent(prompt.content)}`, "_blank");
-                                                    }}
+                                                    onClick={() => handleRunAgent(prompt, "claude")}
                                                 >
                                                     <Bot className="w-4 h-4 text-orange-400" /> <span className="font-bold text-xs capitalize">Claude</span>
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem
                                                     className="flex items-center gap-3 p-3 cursor-pointer focus:bg-primary/10 focus:text-primary rounded-xl transition-colors"
-                                                    onClick={() => {
-                                                        copyToClipboard(prompt.content);
-                                                        setGeminiPromptContent(prompt.content);
-                                                    }}
+                                                    onClick={() => handleRunAgent(prompt, "gemini")}
                                                 >
                                                     <Sparkles className="w-4 h-4 text-blue-400" /> <span className="font-bold text-xs capitalize">Gemini</span>
                                                 </DropdownMenuItem>
@@ -450,6 +475,50 @@ export default function PromptsGallery() {
                     </div>
                 </div>
             )}
+
+            {/* Media Alert Dialog */}
+            <Dialog open={!!mediaAlertPrompt && !!pendingAgentUrl} onOpenChange={(open) => {
+                if (!open) {
+                    setMediaAlertPrompt(null);
+                    setPendingAgentUrl(null);
+                }
+            }}>
+                <DialogContent className="sm:max-w-md bg-[#0f0f0f] border-border text-white rounded-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <ImageIcon className="w-5 h-5 text-primary" />
+                            Media Upload Required
+                        </DialogTitle>
+                        <DialogDescription className="text-zinc-400 mt-2">
+                            This prompt is designed to interact with a specific document or image. Don't forget to attach your file when you paste the prompt!
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex items-center justify-end gap-3 mt-4">
+                        <Button
+                            variant="outline"
+                            className="bg-zinc-900 border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-white"
+                            onClick={() => {
+                                setMediaAlertPrompt(null);
+                                setPendingAgentUrl(null);
+                            }}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
+                            onClick={() => {
+                                if (mediaAlertPrompt && pendingAgentUrl) {
+                                    executeRunAgent(mediaAlertPrompt, pendingAgentUrl);
+                                }
+                                setMediaAlertPrompt(null);
+                                setPendingAgentUrl(null);
+                            }}
+                        >
+                            I Understand, Continue
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             <Footer />
         </div>

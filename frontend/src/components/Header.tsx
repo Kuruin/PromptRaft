@@ -40,7 +40,7 @@ export default function Header() {
             Submit
           </Link>
           {isAuthenticated && user && (
-            <div className="flex items-center gap-4 bg-muted/40 px-4 py-1.5 rounded-full border border-border/50 hidden md:flex">
+            <div className="flex items-center gap-4 bg-muted/40 px-4 py-1.5 rounded-full border border-border/50 md:flex">
               <div title="Daily Streak" className="flex items-center gap-1.5">
                 <Flame className={`w-4 h-4 ${user.streak >= 7 ? 'text-orange-500 fill-orange-500 animate-pulse' : user.streak >= 3 ? 'text-yellow-500 fill-yellow-500' : 'text-muted-foreground'}`} />
                 <span className="text-sm font-bold text-foreground">{user.streak || 0}</span>
