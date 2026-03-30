@@ -76,7 +76,28 @@ const adminMiddleware = async (req, res, next) => {
     }
 };
 
+const optionalAuthMiddleware = async (req, res, next) => {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return next();
+    }
+
+    const token = authHeader.split(' ')[1];
+
+    try {
+        const decoded = jwt.verify(token, process.env.SECRET_TOKEN);
+        if (decoded.id) {
+            req.userId = decoded.id;
+        }
+    } catch (err) {
+        // Silent failure for optional auth
+    }
+    next();
+};
+
 module.exports = {
     authMiddleware,
-    adminMiddleware
+    adminMiddleware,
+    optionalAuthMiddleware
 }

@@ -14,6 +14,8 @@ import ChallengeArena from "./pages/ChallengeArena";
 import { AuthProvider } from "./context/AuthContext";
 
 import AdminDashboard from "./pages/AdminDashboard";
+import PromptsGallery from "./pages/PromptsGallery";
+import PromptGuide from "./pages/PromptGuide";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +34,8 @@ const App = () => (
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/create" element={<CreatePrompt />} />
             <Route path="/arena" element={<ChallengeArena />} />
+            <Route path="/prompts" element={<PromptsGallery />} />
+            <Route path="/guide" element={<PromptGuide />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

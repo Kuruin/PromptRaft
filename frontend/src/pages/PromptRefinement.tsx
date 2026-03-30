@@ -133,6 +133,14 @@ const PromptRefinement = () => {
       fetchPrompts();
     }
     fetchDailyChallenge();
+
+    // Check for pending refinement from external pages (like Gallery)
+    const pending = localStorage.getItem("pending_refinement");
+    if (pending) {
+      setOriginalPrompt(pending);
+      localStorage.removeItem("pending_refinement");
+      toast.success("Prompt loaded from Gallery!", { icon: <Sparkles className="w-4 h-4 text-primary" /> });
+    }
   }, [isAuthenticated]);
 
   const fetchDailyChallenge = async () => {
