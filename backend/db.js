@@ -61,6 +61,10 @@ const promptVersionSchema = new mongoose.Schema({
     versionNumber: { type: Number, required: true },
     content: { type: String, required: true },
     refinedContent: { type: String }, // Stores the AI's output for this version
+    originalTokens: { type: Number, default: 0 },
+    refinedTokens: { type: Number, default: 0 },
+    tokensSaved: { type: Number, default: 0 },
+    projectedSavings: { type: Number, default: 0 },
     aiFeedback: String,
     aiScore: Number,
     createdAt: { type: Date, default: Date.now }

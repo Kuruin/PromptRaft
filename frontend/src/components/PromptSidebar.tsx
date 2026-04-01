@@ -49,8 +49,8 @@ export function PromptSidebar({ prompts, selectedId, onSelect, onNew, onRename, 
     return (
         <div
             className={cn(
-                "border-r bg-card h-[calc(100vh-4rem)] sticky top-16 hidden md:flex flex-col transition-all duration-300 ease-in-out overflow-hidden",
-                isOpen ? "w-64 opacity-100" : "w-0 opacity-0 border-none"
+                "border-r bg-card h-[calc(100vh-2rem)] sticky top-16 hidden md:flex flex-col transition-all duration-300 ease-in-out overflow-hidden",
+                isOpen ? "w-64 opacity-100 " : "w-0 opacity-0 border-none"
             )}
         >
             <div className="w-64 flex flex-col h-full">

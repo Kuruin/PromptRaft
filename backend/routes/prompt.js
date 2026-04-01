@@ -9,7 +9,7 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 // Create a new Prompt Project
 router.post("/", authMiddleware, async (req, res) => {
-    const { title, description, initialContent, initialRefinedContent } = req.body;
+    const { title, description, initialContent, initialRefinedContent, originalTokens, refinedTokens, tokensSaved, projectedSavings } = req.body;
 
     try {
         const newPrompt = await Prompt.create({
@@ -25,6 +25,10 @@ router.post("/", authMiddleware, async (req, res) => {
                 versionNumber: 1,
                 content: initialContent,
                 refinedContent: initialRefinedContent || "",
+                originalTokens: originalTokens || 0,
+                refinedTokens: refinedTokens || 0,
+                tokensSaved: tokensSaved || 0,
+                projectedSavings: projectedSavings || 0,
                 aiFeedback: "Initial Draft",
                 aiScore: 0
             });
@@ -82,7 +86,7 @@ router.get("/:id", authMiddleware, async (req, res) => {
 router.post("/:id/version", authMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
-        const { content, aiFeedback, aiScore, refinedContent } = req.body;
+        const { content, aiFeedback, aiScore, refinedContent, originalTokens, refinedTokens, tokensSaved, projectedSavings } = req.body;
 
         const prompt = await Prompt.findOne({ _id: id, userId: req.userId });
         if (!prompt) {
@@ -109,6 +113,10 @@ router.post("/:id/version", authMiddleware, async (req, res) => {
             versionNumber: count + 1,
             content,
             refinedContent: refinedContent || "", // Save it!
+            originalTokens: originalTokens || 0,
+            refinedTokens: refinedTokens || 0,
+            tokensSaved: tokensSaved || 0,
+            projectedSavings: projectedSavings || 0,
             aiFeedback,
             aiScore
         });

@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import axios from 'axios';
-import { Minimize2, Maximize2 } from "lucide-react";
+import { Minimize2, Maximize2, TrendingDown, DollarSign, PiggyBank, Activity } from "lucide-react";
 import CircularProgressBar from "@/components/Circular-bar";
 import { useAuth } from "@/context/AuthContext";
 import { PromptSidebar } from "@/components/PromptSidebar";
@@ -102,6 +102,17 @@ const PromptRefinement = () => {
   const [activeTab, setActiveTab] = useState("refine");
 
   const [dailyChallenges, setDailyChallenges] = useState<DailyChallenge[]>([]);
+
+  // Token & Cost Analytics
+  const estimateTokens = (text: string) => Math.ceil(text.length / 4);
+  const originalTokens = estimateTokens(originalPrompt || "");
+  const refinedTokens = estimateTokens(refinedPrompt || "");
+  const tokensSaved = originalTokens - refinedTokens;
+  const percentSaved = originalTokens > 0 ? ((tokensSaved / originalTokens) * 100).toFixed(1) : "0.0";
+
+  const GPT4O_COST_PER_MILLION = 5.00; // $5.00 per 1M input tokens
+  const API_RUN_VOLUME = 10000;
+  const savingsPerVolume = ((tokensSaved * API_RUN_VOLUME) / 1000000) * GPT4O_COST_PER_MILLION;
 
   // Attempt Challenge Modal State
   const [isAttemptModalOpen, setIsAttemptModalOpen] = useState(false);
@@ -231,7 +242,11 @@ const PromptRefinement = () => {
         const res = await axios.post("http://localhost:3000/api/v1/prompts", {
           title,
           initialContent: originalPrompt,
-          initialRefinedContent: refinedPrompt // Save the response too!
+          initialRefinedContent: refinedPrompt, // Save the response too!
+          originalTokens,
+          refinedTokens,
+          tokensSaved,
+          projectedSavings: Math.max(0, savingsPerVolume)
         });
 
         toast.success("Project created!");
@@ -252,6 +267,10 @@ const PromptRefinement = () => {
         const res = await axios.post(`http://localhost:3000/api/v1/prompts/${selectedPromptId}/version`, {
           content: originalPrompt,
           refinedContent: refinedPrompt, // Save current output too!
+          originalTokens,
+          refinedTokens,
+          tokensSaved,
+          projectedSavings: Math.max(0, savingsPerVolume),
           aiFeedback: "Manual Save",
           aiScore: 0
         });
@@ -317,7 +336,11 @@ const PromptRefinement = () => {
         const res = await axios.post("http://localhost:3000/api/v1/prompts", {
           title,
           initialContent: originalPrompt,
-          initialRefinedContent: ""
+          initialRefinedContent: "",
+          originalTokens: estimateTokens(originalPrompt),
+          refinedTokens: 0,
+          tokensSaved: 0,
+          projectedSavings: 0
         });
         currentId = res.data.promptId;
 
@@ -351,9 +374,18 @@ const PromptRefinement = () => {
 
       // 3. Auto-Save Result safely in the background using the captured currentId
       if (currentId) {
+        const estRefined = estimateTokens(enhancedContent);
+        const estOriginal = estimateTokens(originalPrompt);
+        const estSaved = estOriginal - estRefined;
+        const estCash = Math.max(0, ((estSaved * 10000) / 1000000) * 5.00);
+
         await axios.post(`http://localhost:3000/api/v1/prompts/${currentId}/version`, {
           content: originalPrompt,
           refinedContent: enhancedContent,
+          originalTokens: estOriginal,
+          refinedTokens: estRefined,
+          tokensSaved: estSaved,
+          projectedSavings: estCash,
           aiFeedback: outputDbCall.data.feedback,
           aiScore: bPercentage
         });
@@ -663,7 +695,7 @@ const PromptRefinement = () => {
               )}
 
               {/* Main Refinement Interface */}
-              <div className={`grid grid-cols-1 lg:grid-cols-2 gap-8 transition-all duration-300 ${isInputFullScreen ? "fixed inset-0 z-50 bg-background p-8 overflow-y-auto" : ""
+              <div className={`grid grid-cols-1 lg:grid-cols-2 gap-8 transition-all duration-300 ${isInputFullScreen ? "fixed inset-0 z-50 bg-background p-8 overflow-y-auto " : ""
                 } ${isOutputFullScreen ? "fixed inset-0 z-50 bg-background p-8 overflow-y-auto" : ""}`} >
                 {/* Input Section */}
                 {!isOutputFullScreen && (
@@ -823,6 +855,61 @@ const PromptRefinement = () => {
                           </div>
                         )}
                       </div>
+
+                      {/* Prompt Analytics & Cost Savings Panel */}
+                      {!isOutputFullScreen && refinedPrompt && (
+                        <div className="mt-6 p-5 bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl relative overflow-hidden group">
+                          {/* Decorative Background Icon */}
+                          <DollarSign className="absolute -right-6 -bottom-6 w-32 h-32 text-neutral-200 dark:text-neutral-800/50 group-hover:scale-110 transition-transform duration-700 pointer-events-none" />
+
+                          <div className="flex items-center gap-2 mb-4 relative z-10">
+                            <PiggyBank className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
+                            <h4 className="text-sm font-bold text-neutral-600 dark:text-neutral-400 uppercase tracking-wider">Token Analytics</h4>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10">
+                            <div className="bg-white dark:bg-neutral-950 rounded-lg p-3 border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors">
+                              <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                                <TrendingDown className="w-3.5 h-3.5" />
+                                <span className="text-[10px] font-bold uppercase tracking-wider">Tokens Saved</span>
+                              </div>
+                              <div className="text-2xl font-black text-foreground">
+                                {tokensSaved.toLocaleString()}
+                              </div>
+                              <div className="text-[10px] text-muted-foreground mt-1 font-mono">
+                                {originalTokens} → {refinedTokens}
+                              </div>
+                            </div>
+
+                            <div className="bg-white dark:bg-neutral-950 rounded-lg p-3 border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors">
+                              <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                                <Activity className="w-3.5 h-3.5" />
+                                <span className="text-[10px] font-bold uppercase tracking-wider">Size Reduction</span>
+                              </div>
+                              <div className="text-2xl font-black text-foreground">
+                                {percentSaved}%
+                              </div>
+                              <div className="text-[10px] text-muted-foreground mt-1">
+                                Optimization Rate
+                              </div>
+                            </div>
+
+                            <div className="bg-white dark:bg-neutral-950 rounded-lg p-3 border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors">
+                              <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                                <DollarSign className="w-3.5 h-3.5" />
+                                <span className="text-[10px] font-bold uppercase tracking-wider">ROI (10K Runs)</span>
+                              </div>
+                              <div className="text-2xl font-black text-foreground">
+                                {savingsPerVolume >= 0 ? "$" : "-$"}{Math.abs(savingsPerVolume).toFixed(3)}
+                              </div>
+                              <div className="text-[10px] text-muted-foreground mt-1 uppercase font-bold tracking-wider">
+                                Projected Savings
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       {isOutputFullScreen ? <div className="px-3 py-10 flex gap-3">
                         <CircularProgressBar sqSize={180} strokeWidth={18} percentage={backendPercentage}></CircularProgressBar>
                         <div
