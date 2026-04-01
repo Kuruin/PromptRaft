@@ -321,7 +321,7 @@ export default function PromptsGallery() {
                                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                         />
                                         <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/90 via-zinc-950/20 to-transparent" />
-                                        <Badge className="absolute top-4 right-4 bg-zinc-900/80 backdrop-blur-md border-zinc-700 text-[10px] font-black uppercase px-2 py-0.5 rounded-lg z-10">
+                                        <Badge className="absolute top-4 right-4 bg-zinc-500/80 backdrop-blur-md border-zinc-700 text-[10px] font-black uppercase px-2 py-0.5 rounded-lg z-10">
                                             {prompt.promptType || 'Image'}
                                         </Badge>
                                     </div>
@@ -356,7 +356,7 @@ export default function PromptsGallery() {
                                     {/* Category & Tags Row */}
                                     <div className="flex flex-wrap items-center gap-2 mt-4">
                                         {prompt.category && prompt.category !== 'none' && (
-                                            <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 text-[9px] uppercase font-black px-2 py-0.5 rounded-lg border">
+                                            <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 text-[9px] uppercase font-black px-2 py-0.5 rounded-lg border hover:bg-neutral-700">
                                                 {prompt.category}
                                             </Badge>
                                         )}
