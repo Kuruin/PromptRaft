@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
-const { SharedPrompt } = require('../db');
+const { SharedPrompt, User } = require('../db');
 const { authMiddleware, optionalAuthMiddleware } = require('../middleware');
 
 // GET /api/v1/gallery - List all shared prompts (filtered by privacy)
@@ -272,7 +272,7 @@ router.post("/:id/upvote", authMiddleware, async (req, res) => {
     }
 });
 
-// DELETE /api/v1/prompts/:id - Delete a shared prompt
+// DELETE /api/v1/gallery/:id - Delete a shared prompt
 router.delete("/:id", authMiddleware, async (req, res) => {
     try {
         const prompt = await SharedPrompt.findById(req.params.id);
@@ -280,8 +280,16 @@ router.delete("/:id", authMiddleware, async (req, res) => {
             return res.status(404).json({ message: "Prompt not found" });
         }
 
-        if (prompt.userId.toString() !== req.userId) {
-            return res.status(403).json({ message: "Unauthorized" });
+        const user = await User.findById(req.userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const isOwner = prompt.userId.toString() === req.userId;
+        const isSuperAdmin = user.isSuperAdmin;
+
+        if (!isOwner && !isSuperAdmin) {
+            return res.status(403).json({ message: "Unauthorized: only the owner or super admin can delete this prompt" });
         }
 
         await SharedPrompt.findByIdAndDelete(req.params.id);

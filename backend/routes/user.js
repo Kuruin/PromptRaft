@@ -227,7 +227,9 @@ router.post("/signin", async (req, res) => {
                 lastName: user.lastName,
                 xp: user.xp,
                 level: user.level,
-                streak: user.streak
+                streak: user.streak,
+                isAdmin: user.isAdmin,
+                isSuperAdmin: user.isSuperAdmin
             }
         });
 

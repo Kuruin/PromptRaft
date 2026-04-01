@@ -11,6 +11,7 @@ interface User {
     level: number;
     streak: number;
     isAdmin?: boolean;
+    isSuperAdmin?: boolean;
 }
 
 interface AuthContextType {

@@ -140,6 +140,50 @@ router.put('/users/:id/block', adminMiddleware, async (req, res) => {
     }
 });
 
+// Update user role
+router.put('/users/:id/role', adminMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { role } = req.body; // 'user', 'admin', 'superadmin'
+
+        // Verify requester is super admin
+        const requester = await User.findById(req.userId);
+        if (!requester || !requester.isSuperAdmin) {
+            return res.status(403).json({ message: "Only Super Admins can manage roles" });
+        }
+
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        if (id === req.userId && role !== 'superadmin') {
+            return res.status(400).json({ message: "You cannot demote yourself" });
+        }
+
+        if (role === 'superadmin') {
+            user.isAdmin = true;
+            user.isSuperAdmin = true;
+        } else if (role === 'admin') {
+            user.isAdmin = true;
+            user.isSuperAdmin = false;
+        } else {
+            user.isAdmin = false;
+            user.isSuperAdmin = false;
+        }
+
+        await user.save();
+
+        res.json({
+            message: `User role successfully updated to ${role}`,
+            user: { _id: user._id, isAdmin: user.isAdmin, isSuperAdmin: user.isSuperAdmin }
+        });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
 // Get settings
 router.get('/settings', adminMiddleware, async (req, res) => {
     try {

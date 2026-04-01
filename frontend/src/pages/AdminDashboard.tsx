@@ -30,6 +30,7 @@ interface UserData {
     streak: number;
     lastLoginDate: string;
     isAdmin: boolean;
+    isSuperAdmin?: boolean;
     isBlocked?: boolean;
     createdAt: string;
 }
@@ -120,7 +121,7 @@ export default function AdminDashboard() {
         }
     }, [activeTab]);
 
-    if (!isAuthenticated || !user?.isAdmin) {
+    if (!isAuthenticated || (!user?.isAdmin && !user?.isSuperAdmin)) {
         return <Navigate to="/" replace />;
     }
 
@@ -196,6 +197,21 @@ export default function AdminDashboard() {
             ));
         } catch (e: any) {
             toast.error(e.response?.data?.message || "Failed to update user block status");
+        }
+    };
+
+    const handleRoleChange = async (id: string, role: 'user' | 'admin' | 'superadmin') => {
+        if (!window.confirm(`Are you sure you want to change this user's role to ${role}?`)) return;
+        try {
+            const res = await axios.put(`http://localhost:3000/api/v1/admin/users/${id}/role`, { role }, {
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+            });
+            toast.success(res.data.message);
+            setUsersList(usersList.map(u =>
+                u._id === id ? { ...u, isAdmin: res.data.user.isAdmin, isSuperAdmin: res.data.user.isSuperAdmin } : u
+            ));
+        } catch (e: any) {
+            toast.error(e.response?.data?.message || "Failed to update user role");
         }
     };
 
@@ -395,7 +411,7 @@ export default function AdminDashboard() {
                                                             </h3>
                                                             <p className="text-sm text-muted-foreground mt-1">{challenge.description}</p>
                                                         </div>
-                                                        <Button variant="custom3" size="icon" className="text-muted-foreground hover:text-black dark:hover:text-white shrink-0 -mt-1 -mr-1" onClick={() => handleDeleteChallenge(challenge._id)}>
+                                                        <Button variant="custom3" size="icon" className="text-muted-foreground rounded-sm hover:text-black dark:hover:text-white shrink-0 -mt-1 -mr-1" onClick={() => handleDeleteChallenge(challenge._id)}>
                                                             <Trash2 className="w-4 h-4" />
                                                         </Button>
                                                     </div>
@@ -542,7 +558,11 @@ export default function AdminDashboard() {
                                                                 {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'N/A'}
                                                             </td>
                                                             <td className="p-4">
-                                                                {u.isAdmin ? (
+                                                                {u.isSuperAdmin ? (
+                                                                    <span className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 px-2 py-1 rounded text-xs font-black flex items-center gap-1 w-max">
+                                                                        <ShieldAlert className="w-3 h-3" /> Super Admin
+                                                                    </span>
+                                                                ) : u.isAdmin ? (
                                                                     <span className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 px-2 py-1 rounded text-xs font-bold flex items-center gap-1 w-max">
                                                                         <ShieldAlert className="w-3 h-3" /> Admin
                                                                     </span>
@@ -555,16 +575,29 @@ export default function AdminDashboard() {
                                                                 )}
                                                             </td>
                                                             <td className="p-4 text-right">
-                                                                {!u.isAdmin && (
-                                                                    <Button
-                                                                        variant="outline"
-                                                                        size="sm"
-                                                                        onClick={() => handleToggleBlock(u._id, u.isBlocked)}
-                                                                        className={u.isBlocked ? "text-green-600 border-green-200 hover:bg-green-50 dark:border-green-900/50 dark:text-green-400 dark:hover:bg-green-900/20" : "text-red-600 border-red-200 hover:bg-red-50 dark:border-red-900/50 dark:text-red-400 dark:hover:bg-red-900/20"}
-                                                                    >
-                                                                        {u.isBlocked ? 'Unblock' : 'Block'}
-                                                                    </Button>
-                                                                )}
+                                                                <div className="flex items-center justify-end gap-2">
+                                                                    {user?.isSuperAdmin && u._id !== user._id && (
+                                                                        <select
+                                                                            value={u.isSuperAdmin ? 'superadmin' : u.isAdmin ? 'admin' : 'user'}
+                                                                            onChange={(e) => handleRoleChange(u._id, e.target.value as any)}
+                                                                            className="px-2 py-1.5 border border-border rounded bg-background text-xs font-medium cursor-pointer focus:ring-1 focus:ring-primary outline-none"
+                                                                        >
+                                                                            <option value="user">User</option>
+                                                                            <option value="admin">Admin</option>
+                                                                            <option value="superadmin">Super Admin</option>
+                                                                        </select>
+                                                                    )}
+                                                                    {!u.isSuperAdmin && (
+                                                                        <Button
+                                                                            variant="outline"
+                                                                            size="sm"
+                                                                            onClick={() => handleToggleBlock(u._id, u.isBlocked)}
+                                                                            className={u.isBlocked ? "text-green-600 border-green-200 hover:bg-green-50 dark:border-green-900/50 dark:text-green-400 dark:hover:bg-green-900/20" : "text-red-600 border-red-200 hover:bg-red-50 dark:border-red-900/50 dark:text-red-400 dark:hover:bg-red-900/20"}
+                                                                        >
+                                                                            {u.isBlocked ? 'Unblock' : 'Block'}
+                                                                        </Button>
+                                                                    )}
+                                                                </div>
                                                             </td>
                                                         </tr>
                                                     ))}
