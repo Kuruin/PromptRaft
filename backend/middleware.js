@@ -22,7 +22,7 @@ const authMiddleware = async (req, res, next) => {
             const settings = await Settings.findOne();
             if (settings && settings.isMaintenanceMode) {
                 const user = await User.findById(req.userId);
-                if (!user || !user.isAdmin) {
+                if (!user || (!user.isAdmin && !user.isSuperAdmin)) {
                     return res.status(503).json({ message: "Platform is currently under maintenance." });
                 }
             }
@@ -57,7 +57,7 @@ const adminMiddleware = async (req, res, next) => {
             req.userId = decoded.id;
             // Check if user is admin in DB
             const user = await User.findById(req.userId);
-            if (user && user.isAdmin) {
+            if (user && (user.isAdmin || user.isSuperAdmin)) {
                 next();
             } else {
                 return res.status(403).json({

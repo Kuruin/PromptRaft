@@ -44,6 +44,7 @@ const userSchema = new mongoose.Schema({
     lastLoginDate: { type: Date, default: Date.now },
     lastChallengeDate: { type: Date },
     isAdmin: { type: Boolean, default: false },
+    isSuperAdmin: { type: Boolean, default: false },
     isBlocked: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now }
 });

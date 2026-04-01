@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Helmet } from "react-helmet";
-import { Search, Copy, Share2, TrendingUp, Clock, Tag, MessageSquare, ThumbsUp, Sparkles, Plus, ExternalLink, Lock, Settings, X, ImageIcon } from "lucide-react";
+import { Search, Copy, Share2, TrendingUp, Clock, Tag, MessageSquare, ThumbsUp, Sparkles, Plus, ExternalLink, Lock, Settings, X, ImageIcon, Trash2 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -164,6 +164,22 @@ export default function PromptsGallery() {
     const tryInRefiner = (content: string) => {
         localStorage.setItem("pending_refinement", content);
         navigate("/prompt-refine");
+    };
+
+    const handleDelete = async (e: React.MouseEvent, id: string) => {
+        e.stopPropagation();
+        if (!window.confirm("Are you sure you want to delete this prompt?")) return;
+
+        try {
+            const token = localStorage.getItem("token");
+            await axios.delete(`http://localhost:3000/api/v1/gallery/${id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setPrompts(prev => prev.filter(p => p._id !== id));
+            toast.success("Prompt deleted successfully");
+        } catch (err) {
+            toast.error("Failed to delete prompt");
+        }
     };
 
     const allTags = Array.from(new Set(prompts.flatMap(p => p.tags))).slice(0, 10);
@@ -425,8 +441,18 @@ export default function PromptsGallery() {
                                                     e.stopPropagation();
                                                     navigate(`/create?id=${prompt._id}`);
                                                 }}
+                                                title="Edit Prompt"
                                             >
                                                 <Settings className="w-4 h-4" />
+                                            </button>
+                                        )}
+                                        {user && (user._id === prompt.userId || user.isSuperAdmin) && (
+                                            <button
+                                                className="text-muted-foreground hover:text-red-500 transition-all active:scale-90"
+                                                onClick={(e) => handleDelete(e, prompt._id)}
+                                                title="Delete Prompt"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
                                             </button>
                                         )}
                                     </div>
