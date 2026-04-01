@@ -10,6 +10,7 @@ import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
 import CreatePrompt from "./pages/CreatePrompt";
 import ChallengeArena from "./pages/ChallengeArena";
+import BattleArena from "./pages/BattleArena";
 
 import { AuthProvider } from "./context/AuthContext";
 
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/create" element={<CreatePrompt />} />
             <Route path="/arena" element={<ChallengeArena />} />
+            <Route path="/battles" element={<BattleArena />} />
             <Route path="/prompts" element={<PromptsGallery />} />
             <Route path="/guide" element={<PromptGuide />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
