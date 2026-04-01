@@ -119,8 +119,8 @@ export default function CreatePrompt() {
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            if (file.size > 2 * 1024 * 1024) {
-                toast.error("Image must be less than 2MB");
+            if (file.size > 10 * 1024 * 1024) {
+                toast.error("Image must be less than 10MB");
                 return;
             }
             const reader = new FileReader();
@@ -341,7 +341,7 @@ export default function CreatePrompt() {
                                 )}
                             </div>
                             <p className="text-[11px] text-zinc-500 dark:text-zinc-600 ml-1 leading-relaxed">
-                                Upload a high-resolution landscape image from your device to serve as the prompt card background! Max ~2MB. 🖼️
+                                Upload a high-resolution landscape image from your device to serve as the prompt card background! Max ~10MB. 🖼️
                             </p>
                         </div>
 

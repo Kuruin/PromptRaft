@@ -1,8 +1,30 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
+const cloudinary = require('cloudinary').v2;
 const { SharedPrompt, User } = require('../db');
 const { authMiddleware, optionalAuthMiddleware } = require('../middleware');
+
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+async function uploadToCloudinary(base64String) {
+    if (!base64String || !base64String.startsWith('data:image/')) return base64String;
+    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY) return base64String;
+
+    try {
+        const uploadRes = await cloudinary.uploader.upload(base64String, {
+            folder: 'promptraft_prompts'
+        });
+        return uploadRes.secure_url;
+    } catch (err) {
+        console.error("Cloudinary upload failed:", err);
+        return base64String;
+    }
+}
 
 // GET /api/v1/gallery - List all shared prompts (filtered by privacy)
 router.get("/", optionalAuthMiddleware, async (req, res) => {
@@ -158,6 +180,8 @@ router.post("/", authMiddleware, async (req, res) => {
             return res.status(400).json({ message: "Title and content are required" });
         }
 
+        const finalImageUrl = await uploadToCloudinary(imageUrl);
+
         const sharedPrompt = await SharedPrompt.create({
             userId: req.userId,
             title,
@@ -170,7 +194,7 @@ router.post("/", authMiddleware, async (req, res) => {
             promptType: promptType || 'text',
             category: category || 'none',
             contributors: contributors || [],
-            imageUrl: imageUrl || '',
+            imageUrl: finalImageUrl || '',
             structuredFormat: structuredFormat || 'none'
         });
 
@@ -211,6 +235,8 @@ router.put("/:id", authMiddleware, async (req, res) => {
             structuredFormat,
         } = req.body;
 
+        const finalImageUrl = await uploadToCloudinary(imageUrl);
+
         const updatedPrompt = await SharedPrompt.findByIdAndUpdate(
             req.params.id,
             {
@@ -224,7 +250,7 @@ router.put("/:id", authMiddleware, async (req, res) => {
                 promptType,
                 category,
                 contributors,
-                imageUrl,
+                imageUrl: finalImageUrl,
                 structuredFormat,
                 updatedAt: Date.now()
             },
