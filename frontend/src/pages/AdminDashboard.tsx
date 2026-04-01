@@ -5,7 +5,7 @@ import axios from 'axios';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { CardEnhanced, CardEnhancedHeader, CardEnhancedTitle, CardEnhancedContent } from '@/components/ui/card-enhanced';
-import { ShieldAlert, Plus, Check, Target, Users, Settings, Trash2, Ban } from 'lucide-react';
+import { ShieldAlert, Plus, Check, Target, Users, Settings, Trash2, Ban, Swords } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Challenge {
@@ -56,6 +56,11 @@ export default function AdminDashboard() {
     const [durationDays, setDurationDays] = useState(7);
     const [durationHours, setDurationHours] = useState(0);
     const [durationMinutes, setDurationMinutes] = useState(0);
+
+    // Global Battles state
+    const [gbTargetGoal, setGbTargetGoal] = useState("");
+    const [gbMaxTokens, setGbMaxTokens] = useState(50);
+    const [gbBetAmount, setGbBetAmount] = useState(10);
 
     const fetchChallenges = async () => {
         try {
@@ -140,6 +145,25 @@ export default function AdminDashboard() {
         }
     };
 
+    const handleCreateGlobalBattle = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            await axios.post('http://localhost:3000/api/v1/battles/global', {
+                targetGoal: gbTargetGoal,
+                maxTokens: gbMaxTokens,
+                betAmount: gbBetAmount
+            }, {
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+            });
+            toast.success("Global Battle Created!");
+            setGbTargetGoal('');
+            setGbMaxTokens(50);
+            setGbBetAmount(10);
+        } catch (e: any) {
+            toast.error(e.response?.data?.error || "Failed to create battle");
+        }
+    };
+
     const handleSetActive = async (id: string) => {
         try {
             await axios.put(`http://localhost:3000/api/v1/admin/challenges/${id}/active`);
@@ -192,6 +216,7 @@ export default function AdminDashboard() {
     const navItems = [
         { id: 'dailyChallenges', label: 'Daily Challenges', icon: Target },
         { id: 'weeklyChallenges', label: 'Weekly Challenges', icon: Target },
+        { id: 'globalBattles', label: 'Global Battles', icon: Swords },
         { id: 'users', label: 'Manage Users', icon: Users },
         { id: 'settings', label: 'Platform Settings', icon: Settings },
     ];
@@ -233,6 +258,7 @@ export default function AdminDashboard() {
                         <p className="text-muted-foreground mt-2">
                             {activeTab === 'dailyChallenges' && "Create and manage daily challenges for the Bento Grid."}
                             {activeTab === 'weeklyChallenges' && "Create and manage weekly challenges for the Arena."}
+                            {activeTab === 'globalBattles' && "Initialize official 2-player battles open to the entire platform."}
                             {activeTab === 'users' && "View and moderate all registered users on PromptRaft."}
                             {activeTab === 'settings' && "Configure global application settings and theme defaults."}
                         </p>
@@ -402,6 +428,63 @@ export default function AdminDashboard() {
                                             ))}
                                         </div>
                                     )}
+                                </CardEnhancedContent>
+                            </CardEnhanced>
+                        </div>
+                    )}
+
+                    {/* Global Battles Tab */}
+                    {activeTab === 'globalBattles' && (
+                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 h-full">
+                            <CardEnhanced variant="outline" className="h-[600px] flex flex-col">
+                                <CardEnhancedHeader>
+                                    <div className="flex items-center gap-2">
+                                        <Swords className="w-5 h-5 text-orange-500" />
+                                        <CardEnhancedTitle>Create Global Battle</CardEnhancedTitle>
+                                    </div>
+                                </CardEnhancedHeader>
+                                <CardEnhancedContent className="flex-1 overflow-y-auto custom-scrollbar">
+                                    <form onSubmit={handleCreateGlobalBattle} className="space-y-4">
+                                        <div className="bg-orange-500/10 border border-orange-500/20 p-4 rounded-lg mb-4 text-sm text-foreground">
+                                            A Global Battle is an empty template. Player 1 joins and locks in their prompt, then Player 2 joins to execute the duel.
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-1">Target Goal</label>
+                                            <input
+                                                type="text"
+                                                required
+                                                className="w-full p-2 border rounded bg-background"
+                                                value={gbTargetGoal}
+                                                onChange={e => setGbTargetGoal(e.target.value)}
+                                                placeholder="e.g., Code a functional Snake game in Python"
+                                            />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium mb-1">Max Tokens</label>
+                                                <input
+                                                    type="number"
+                                                    required min="1"
+                                                    className="w-full p-2 border rounded bg-background"
+                                                    value={gbMaxTokens}
+                                                    onChange={e => setGbMaxTokens(Number(e.target.value))}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium mb-1">Entry Fee (XP)</label>
+                                                <input
+                                                    type="number"
+                                                    required min="0"
+                                                    className="w-full p-2 border rounded bg-background"
+                                                    value={gbBetAmount}
+                                                    onChange={e => setGbBetAmount(Number(e.target.value))}
+                                                />
+                                            </div>
+                                        </div>
+                                        <Button type="submit" className="w-full gap-2 mt-4 bg-orange-600 hover:bg-orange-700 text-white">
+                                            <Plus className="w-4 h-4" /> Broadcast Global Battle
+                                        </Button>
+                                    </form>
                                 </CardEnhancedContent>
                             </CardEnhanced>
                         </div>

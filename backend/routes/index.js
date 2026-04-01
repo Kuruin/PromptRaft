@@ -3,6 +3,7 @@ const router = express.Router();
 const userRouter = require('./user');
 const promptRouter = require('./prompt');
 const adminRouter = require('./admin');
+const battleRouter = require('./battles');
 const { Challenge, User, ChallengeSubmission } = require('../db');
 const { authMiddleware } = require('../middleware');
 const { addXp, updateStreak } = require('../gamification');
@@ -13,6 +14,7 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 router.use("/user", userRouter);
 router.use("/prompts", promptRouter);
 router.use("/admin", adminRouter);
+router.use("/battles", battleRouter);
 
 // Public route to get all daily challenges
 router.get("/challenges/daily", async (req, res) => {

@@ -36,6 +36,9 @@ export default function Header() {
           <Link to="/arena" className="text-sm font-medium text-primary hover:text-primary/80 transition-colors flex items-center gap-1">
             <Swords className="w-4 h-4" /> Arena
           </Link>
+          <Link to="/battles" className="text-sm font-medium text-orange-500 hover:text-orange-400 transition-colors flex items-center gap-1">
+            <Flame className="w-4 h-4" /> Battles
+          </Link>
           <Link to="/create" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">
             Submit
           </Link>

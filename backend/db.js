@@ -112,6 +112,22 @@ const sharedPromptSchema = new mongoose.Schema({
     updatedAt: { type: Date, default: Date.now }
 });
 
+const battleSchema = new mongoose.Schema({
+    isGlobal: { type: Boolean, default: false },
+    challengerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    opponentId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    targetGoal: { type: String, required: true },
+    maxTokens: { type: Number, required: true },
+    betAmount: { type: Number, required: true, default: 0 },
+    challengerPrompt: { type: String },
+    opponentPrompt: { type: String },
+    winnerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    status: { type: String, enum: ['open', 'completed'], default: 'open' },
+    aiReasoning: { type: String },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now }
+});
+
 const User = mongoose.model("User", userSchema);
 const Prompt = mongoose.model("Prompt", promptSchema);
 const PromptVersion = mongoose.model("PromptVersion", promptVersionSchema);
@@ -119,5 +135,6 @@ const Challenge = mongoose.model("Challenge", challengeSchema);
 const ChallengeSubmission = mongoose.model("ChallengeSubmission", challengeSubmissionSchema);
 const Settings = mongoose.model("Settings", settingsSchema);
 const SharedPrompt = mongoose.model("SharedPrompt", sharedPromptSchema);
+const Battle = mongoose.model("Battle", battleSchema);
 
-module.exports = { connectDb, User, Prompt, PromptVersion, Challenge, ChallengeSubmission, Settings, SharedPrompt }
+module.exports = { connectDb, User, Prompt, PromptVersion, Challenge, ChallengeSubmission, Settings, SharedPrompt, Battle }
