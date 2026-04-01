@@ -13,7 +13,7 @@ const port = 3000;
 connectDb();
 
 app.use(cors({
-    origin: 'http://localhost:8080', // Replace with your frontend URL
+    origin: ['http://localhost:8080', 'http://localhost:4173'], // Replace with your frontend URL
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
 }));

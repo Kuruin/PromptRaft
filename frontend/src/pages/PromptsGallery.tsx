@@ -311,6 +311,7 @@ export default function PromptsGallery() {
                             <Card
                                 key={prompt._id}
                                 className="group bg-card border border-border hover:border-primary/40 transition-all duration-500 rounded-xl overflow-hidden flex flex-col h-full hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)] active:scale-[0.98]"
+                                style={{ contentVisibility: 'auto', containIntrinsicSize: '0 400px' } as React.CSSProperties}
                             >
                                 {/* Card header with optional image */}
                                 {prompt.imageUrl ? (
@@ -318,6 +319,8 @@ export default function PromptsGallery() {
                                         <img
                                             src={prompt.imageUrl}
                                             alt={prompt.title}
+                                            loading="lazy"
+                                            decoding="async"
                                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                         />
                                         <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/90 via-zinc-950/20 to-transparent" />
